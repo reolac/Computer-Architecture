@@ -1,0 +1,1782 @@
+* A 32-bit instruction set for the JASP architecture.
+*
+* Originally based on an instruction set
+* by William Henderson.
+*
+* Revision : 0.9.3
+* Author   : Mark Burrell
+* Date     : 29-MAR-2003
+*
+*
+* Force the JASM assembler to use 32-bit operations
+Force_32bit
+*
+Fetch
+* fetch cycle definition
+MAR<-[PC]    
+INC<-[PC]    
+PC<-[INC]    
+MDR<-[M[MAR]]    
+IR<-[MDR]    
+MAR<-[PC]           } operand in MDR
+INC<-[PC]           }
+PC<-[INC]           }
+MDR<-[M[MAR]]       }
+CU<-[IR(opcode)]    
+
+Interrupt
+* interrupt routine
+PSR(I)=0                    interrupt flag = 0
+MAR<-[SP]                     }     save PSR
+MDR<-[PSR]                    }     on the stack
+M[MAR]<-[MDR]                 }
+ALUx<-[SP]                  }  decrement
+ALUr=[ALUx]-1               }  SP
+SP<-[ALUr]                  }
+ALUx<-[PC]                    }
+MDR<-[ALUx]                   }     write PC
+MAR<-[SP]                     }     to the stack
+M[MAR]<-[MDR]                 }
+ALUx<-[SP]                  }  decrement
+ALUr=[ALUx]-1               }  SP
+SP<-[ALUr]                  }
+PSR(E)=0                    interrupt enable flag = 0
+ALUy<-[JUMPERS(IntBase)]      }
+ALUx<-[PSR(IntVec)]           } build the vector address
+ALUr=[ALUx]+[ALUy]            }
+MAR<-[ALUr]                 } obtain the handler address
+MDR<-[M[MAR]]               }
+PC<-[MDR]                   load address of handler into PC
+
+Opcode fa
+Mnemonic "TRAP #dataword"
+Description "Software interrupt mechanism"
+* programmably trigger the interrupt routine
+*
+* The #dataword value is masked with %00000111
+* to produce the interrupt vector
+*
+PSR(IntVec)<-[MDR]             } Load the PSR with the Interrupt Vector
+PSR(I)=1                       } Fire the interrupt
+
+Opcode 00
+Mnemonic "ADD #dataword,A"
+Description "Add to reg. A an immediate oper."
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+A<-[ALUr]    
+
+Opcode 01
+Mnemonic "ADD #dataword,B"
+Description "Add to reg. B an immediate oper."
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+B<-[ALUr]    
+
+Opcode 02
+Mnemonic "ADD addrword,A"
+Description "Add to reg. A from a direct addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+A<-[ALUr]    
+
+Opcode 03
+Mnemonic "ADD addrword,B"
+Description "Add to reg. B from a direct addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+B<-[ALUr]    
+
+Opcode 04
+Mnemonic "ADD (addrword),A"
+Description "Add to reg. A from an indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+A<-[ALUr]    
+
+Opcode 05
+Mnemonic "ADD (addrword),B"
+Description "Add to reg. B from an indirect addr."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+B<-[ALUr]    
+
+Opcode 06
+Mnemonic "ADD B,A"
+Description "Add B reg. to contents of A reg."
+ALUy<-[A]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+A<-[ALUr]    
+
+Opcode 07
+Mnemonic "ADD A,B"
+Description "Add A reg. to contents of B reg."
+ALUy<-[A]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+B<-[ALUr]    
+
+Opcode 08
+Mnemonic "ADD (B),A"
+Description "Add B reg. indirect oper. to A reg."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+A<-[ALUr]    
+
+Opcode 09
+Mnemonic "ADD (A),B"
+Description "Add A reg. indirect oper. to B reg."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+B<-[ALUr]    
+
+Opcode 0a
+Mnemonic "ADD B+addrword,A"
+Description "Add to reg. A from an indexed addr (index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+A<-[ALUr]    
+
+Opcode 0b
+Mnemonic "ADD A+addrword,B"
+Description "Add to reg. B from an indexed addr (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+B<-[ALUr]    
+
+Opcode 10
+Mnemonic "ADC #dataword,A"
+Description "Add with carry to reg. A an immediate oper."
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+A<-[ALUr]    
+
+Opcode 11
+Mnemonic "ADC #dataword,B"
+Description "Add with carry to reg. B an immediate oper."
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+B<-[ALUr]    
+
+Opcode 12
+Mnemonic "ADC addrword,A"
+Description "Add with carry to reg. A from a direct addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+A<-[ALUr]    
+
+Opcode 13
+Mnemonic "ADC addrword,B"
+Description "Add with carry to reg. B from a direct addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+B<-[ALUr]    
+
+Opcode 14
+Mnemonic "ADC (addrword),A"
+Description "Add with carry to reg. A from an indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+A<-[ALUr]    
+
+Opcode 15
+Mnemonic "ADC (addrword),B"
+Description "Add with carry to reg. B from an indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+B<-[ALUr]    
+
+Opcode 16
+Mnemonic "ADC B,A"
+Description "Add with carry to A reg. from B reg."
+ALUy<-[B]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+A<-[ALUr]    
+
+Opcode 17
+Mnemonic "ADC A,B"
+Description "Add with carry to B reg. from A reg."
+ALUy<-[A]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+B<-[ALUr]    
+
+Opcode 18
+Mnemonic "ADC (B),A"
+Description "Add with carry to B reg. a reg. indirect oper."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+A<-[ALUr]    
+
+Opcode 19
+Mnemonic "ADC (A),B"
+Description "Add with carry to B reg. a reg. indirect oper."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+B<-[ALUr]    
+
+Opcode 1a
+Mnemonic "ADC B+addrword,A"
+Description "Add with carry to reg. A an indexed oper. (index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+A<-[ALUr]    
+
+Opcode 1b
+Mnemonic "ADC A+addrword,B"
+Description "Add with carry to reg. B an indexed oper. (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]+[PSR(c)]    
+B<-[ALUr]    
+
+Opcode 20
+Mnemonic "SUB #dataword,A"
+Description "Subtract an immediate oper. from A reg"
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+A<-[ALUr]    
+
+Opcode 21
+Mnemonic "SUB #dataword,B"
+Description "Subtract an immediate oper. from B reg"
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+B<-[ALUr]    
+
+Opcode 22
+Mnemonic "SUB addrword,A"
+Description "Subtract from reg. A a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+A<-[ALUr]    
+
+Opcode 23
+Mnemonic "SUB addrword,B"
+Description "Subtract from reg. B a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+B<-[ALUr]    
+
+Opcode 24
+Mnemonic "SUB (addrword),A"
+Description "Subtract from reg. A an indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+A<-[ALUr]    
+
+Opcode 25
+Mnemonic "SUB (addrword),B"
+Description "Subtract from reg. B an indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+B<-[ALUr]    
+
+Opcode 26
+Mnemonic "SUB B,A"
+Description "Subtract from reg. A the contents of reg. B"
+ALUx<-[A]    
+ALUy<-[B]    
+ALUr=[ALUx]-[ALUy]    
+A<-[ALUr]    
+
+Opcode 27
+Mnemonic "SUB A,B"
+Description "Subtract from reg. B the contents of reg. A"
+ALUx<-[B]    
+ALUy<-[A]    
+ALUr=[ALUx]-[ALUy]    
+B<-[ALUr]    
+
+Opcode 28
+Mnemonic "SUB (B),A"
+Description "Subtract from reg. A a reg. indirect oper."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+A<-[ALUr]    
+
+Opcode 29
+Mnemonic "SUB (A),B"
+Description "Subtract from reg. B a reg. indirect oper."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+B<-[ALUr]    
+
+Opcode 2a
+Mnemonic "SUB B+addrword,A"
+Description "Subtract an indexed oper. from the reg. A (index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]-[ALUy]    
+A<-[ALUr]    
+
+Opcode 2b
+Mnemonic "SUB A+addrword,B"
+Description "Subtract an indexed oper. from the reg. B (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]-[ALUy]    
+B<-[ALUr]    
+
+Opcode 32
+Mnemonic "SHL addrword"
+Description "Shift left a memory direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]<<1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 34
+Mnemonic "SHL (addrword)"
+Description "Shift left a memory indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]<<1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 36
+Mnemonic "SHL A"
+Description "Shift left reg. A"
+ALUx<-[A]    
+ALUr=[ALUx]<<1    
+A<-[ALUr]    
+
+Opcode 37
+Mnemonic "SHL B"
+Description "Shift left reg. B"
+ALUx<-[B]    
+ALUr=[ALUx]<<1    
+B<-[ALUr]    
+
+Opcode 38
+Mnemonic "SHL (A)"
+Description "Shift left a reg. indirect oper., addr in A"
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]<<1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 39
+Mnemonic "SHL (B)"
+Description "Shift left a reg. indirect oper., addr in B"
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]<<1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 3a
+Mnemonic "SHL A+addrword"
+Description "Shift left an indexed oper. (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]<<1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 3b
+Mnemonic "SHL B+addrword"
+Description "Shift left an indexed oper. (index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]<<1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 42
+Mnemonic "SHR addrword"
+Description "Shift right a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]>>1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 44
+Mnemonic "SHR (addrword)"
+Description "Shift right a memory indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]>>1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 46
+Mnemonic "SHR A"
+Description "Shift right the contents of reg. A"
+ALUx<-[A]    
+ALUr=[ALUx]>>1    
+A<-[ALUr]    
+
+Opcode 47
+Mnemonic "SHR B"
+Description "Shift right the contents of reg. B"
+ALUx<-[B]    
+ALUr=[ALUx]>>1    
+B<-[ALUr]    
+
+Opcode 48
+Mnemonic "SHR (A)"
+Description "Shift right a reg. indirect oper."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]>>1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 49
+Mnemonic "SHR (B)"
+Description "Shift right a reg. indirect oper."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]>>1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 4a
+Mnemonic "SHR A+addrword"
+Description "Shift right a memory indexed oper. (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]>>1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 4b
+Mnemonic "SHR B+addrword"
+Description "Shift right a memory indexed oper. (Index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=[ALUx]>>1    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 50
+Mnemonic "AND #dataword,A"
+Description "AND operation on A reg and an immediate oper."
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]&[ALUy]    
+A<-[ALUr]    
+
+Opcode 51
+Mnemonic "AND #dataword,B"
+Description "AND operation on B reg and an immediate oper."
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]&[ALUy]    
+B<-[ALUr]    
+
+Opcode 52
+Mnemonic "AND addrword,A"
+Description "AND operation on A and a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]&[ALUy]    
+A<-[ALUr]    
+
+Opcode 53
+Mnemonic "AND addrword,B"
+Description "AND operation on B and a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]&[ALUy]    
+B<-[ALUr]    
+
+Opcode 54
+Mnemonic "AND (addrword),A"
+Description "AND operation on A and an indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]&[ALUy]    
+A<-[ALUr]    
+
+Opcode 55
+Mnemonic "AND (addrword),B"
+Description "AND operation on B and an indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]&[ALUy]    
+B<-[ALUr]    
+
+Opcode 56
+Mnemonic "AND B,A"
+Description "AND on A and B, result in A"
+ALUy<-[B]    
+ALUx<-[A]    
+ALUr=[ALUx]&[ALUy]    
+A<-[ALUr]    
+
+Opcode 57
+Mnemonic "AND A,B"
+Description "AND on B and A, result in B"
+ALUy<-[A]    
+ALUx<-[B]    
+ALUr=[ALUx]&[ALUy]    
+B<-[ALUr]    
+
+Opcode 58
+Mnemonic "AND (B),A"
+Description "AND on A and a reg. indirect oper."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUy<-[A]    
+ALUr=[ALUx]&[ALUy]    
+A<-[ALUr]    
+
+Opcode 59
+Mnemonic "AND (A),B"
+Description "AND on B and a reg. indirect oper."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUy<-[B]    
+ALUr=[ALUx]&[ALUy]    
+B<-[ALUr]    
+
+Opcode 5a
+Mnemonic "AND B+addrword,A"
+Description "AND operation on A and an indexed oper."
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]&[ALUy]    
+A<-[ALUr]    
+
+Opcode 5b
+Mnemonic "AND A+addrword,B"
+Description "AND operation on B and an indexed oper."
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]&[ALUy]    
+B<-[ALUr]    
+
+Opcode 60
+Mnemonic "OR #dataword,A"
+Description "OR operation on A reg and an immediate oper."
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]|[ALUy]    
+A<-[ALUr]    
+
+Opcode 61
+Mnemonic "OR #dataword,B"
+Description "OR operation on B reg and an immediate oper."
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]|[ALUy]    
+B<-[ALUr]    
+
+Opcode 62
+Mnemonic "OR addrword,A"
+Description "OR operation on A and a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]|[ALUy]    
+A<-[ALUr]    
+
+Opcode 63
+Mnemonic "OR addrword,B"
+Description "OR operation on B and a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]|[ALUy]    
+B<-[ALUr]    
+
+Opcode 64
+Mnemonic "OR (addrword),A"
+Description "OR operation on A and an indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]|[ALUy]    
+A<-[ALUr]    
+
+Opcode 65
+Mnemonic "OR (addrword),B"
+Description "OR operation on B and an indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]|[ALUy]    
+B<-[ALUr]    
+
+Opcode 66
+Mnemonic "OR B,A"
+Description "OR on A and B, result in A"
+ALUy<-[B]    
+ALUx<-[A]    
+ALUr=[ALUx]|[ALUy]    
+A<-[ALUr]    
+
+Opcode 67
+Mnemonic "OR A,B"
+Description "OR on B and A, result in B"
+ALUy<-[A]    
+ALUx<-[B]    
+ALUr=[ALUx]|[ALUy]    
+B<-[ALUr]    
+
+Opcode 68
+Mnemonic "OR (B),A"
+Description "OR on A and a reg. indirect oper."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUy<-[A]    
+ALUr=[ALUx]|[ALUy]    
+A<-[ALUr]    
+
+Opcode 69
+Mnemonic "OR (A),B"
+Description "OR on B and a reg. indirect oper."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUy<-[B]    
+ALUr=[ALUx]|[ALUy]    
+B<-[ALUr]    
+
+Opcode 6a
+Mnemonic "OR B+addrword,A"
+Description "OR operation on A and an indexed oper."
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]|[ALUy]    
+A<-[ALUr]    
+
+Opcode 6b
+Mnemonic "OR A+addrword,B"
+Description "OR operation on B and an indexed oper."
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]|[ALUy]    
+B<-[ALUr]    
+
+Opcode 72
+Mnemonic "NOT addrword"
+Description "NOT operation on a direct oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=~[ALUx]    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 74
+Mnemonic "NOT (addrword)"
+Description "NOT operation on an indirect oper."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=~[ALUx]    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 76
+Mnemonic "NOT A"
+Description "NOT operation on A reg."
+ALUx<-[A]    
+ALUr=~[ALUx]    
+A<-[ALUr]    
+
+Opcode 77
+Mnemonic "NOT B"
+Description "NOT operation on B reg."
+ALUx<-[B]    
+ALUr=~[ALUx]    
+B<-[ALUr]    
+
+Opcode 78
+Mnemonic "NOT (A)"
+Description "NOT on a reg. indirect oper. (addr in A)"
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=~[ALUx]    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 79
+Mnemonic "NOT (B)"
+Description "NOT on a reg. indirect oper. (addr in B)"
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=~[ALUx]    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 7a
+Mnemonic "NOT A+addrword"
+Description "NOT on an indexed oper. (index in A)"
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=~[ALUx]    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 7b
+Mnemonic "NOT B+addrword"
+Description "NOT on an indexed oper. (index in B)"
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[MDR]    
+ALUr=~[ALUx]    
+MDR<-[ALUr]    
+M[MAR]<-[MDR]    
+
+Opcode 7c
+Mnemonic "SWAP A"
+Description "Swap A register lo and hi bytes"
+ALUx<-[A]    
+ALUr(7:0)=[ALUx(15:8)];ALUr(15:8)=[ALUx(7:0)]    
+A<-[ALUr]    
+
+Opcode 7d
+Mnemonic "SWAP B"
+Description "Swap B register lo and hi bytes"
+ALUx<-[B]    
+ALUr(7:0)=[ALUx(15:8)];ALUr(15:8)=[ALUx(7:0)]    
+B<-[ALUr]    
+
+Opcode 80
+Mnemonic "CMP #dataword,A"
+Description "Compare an immediate oper. with A reg"
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 81
+Mnemonic "CMP #dataword,B"
+Description "Compare an immediate oper. with B reg"
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 82
+Mnemonic "CMP addrword,A"
+Description "Compare a direct oper. with A reg."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 83
+Mnemonic "CMP addrword,B"
+Description "Compare a direct oper. with B reg."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 84
+Mnemonic "CMP (addrword),A"
+Description "Compare an indirect oper. with A reg."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 85
+Mnemonic "CMP (addrword),B"
+Description "Compare an indirect oper. with B reg."
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 86
+Mnemonic "CMP B,A"
+Description "Compare A and B reg."
+ALUx<-[A]    
+ALUy<-[B]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 87
+Mnemonic "CMP A,B"
+Description "Compare B and A reg."
+ALUx<-[B]    
+ALUy<-[A]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 88
+Mnemonic "CMP (B),A"
+Description "Compare A with a reg. indirect oper."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 89
+Mnemonic "CMP (A),B"
+Description "Compare B with a reg. indirect oper."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 8a
+Mnemonic "CMP B+addrword,A"
+Description "Compare with A an indexed oper."
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 8b
+Mnemonic "CMP A+addrword,B"
+Description "Compare with B an indexed oper."
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]-[ALUy]    
+
+Opcode 8c
+Mnemonic "PUSH A"
+Description "Push A onto the stack"
+MAR<-[SP]    
+MDR<-[A]    
+M[MAR]<-[MDR]    
+ALUx<-[SP]    
+ALUr=[ALUx]-1    
+SP<-[ALUr]    
+
+Opcode 8d
+Mnemonic "PUSH B"
+Description "Push B onto the stack"
+MAR<-[SP]    
+MDR<-[B]    
+M[MAR]<-[MDR]    
+ALUx<-[SP]    
+ALUr=[ALUx]-1    
+SP<-[ALUr]    
+
+Opcode 8e
+Mnemonic "POP A"
+Description "Pop A from the stack"
+ALUx<-[SP]    
+ALUr=[ALUx]+1    
+SP<-[ALUr]    
+MAR<-[SP]    
+MDR<-[M[MAR]]    
+A<-[MDR]    
+
+Opcode 8f
+Mnemonic "POP B"
+Description "Pop B from the stack"
+ALUx<-[SP]    
+ALUr=[ALUx]+1    
+SP<-[ALUr]    
+MAR<-[SP]    
+MDR<-[M[MAR]]    
+B<-[MDR]    
+
+Opcode 90
+Mnemonic "MOVE #dataword,A"
+Description "Move an immediate oper. into A"
+A<-[MDR]    
+
+Opcode 91
+Mnemonic "MOVE #dataword,B"
+Description "Move an immediate oper. into B"
+B<-[MDR]    
+
+Opcode 92
+Mnemonic "MOVE addrword,A"
+Description "Load reg. A from a direct addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+A<-[MDR]    
+
+Opcode 93
+Mnemonic "MOVE addrword,B"
+Description "Load reg. B from a direct addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+B<-[MDR]    
+
+Opcode 94
+Mnemonic "MOVE (addrword),A"
+Description "Load reg. A from an indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+A<-[MDR]    
+
+Opcode 95
+Mnemonic "MOVE (addrword),B"
+Description "Load reg. B from an indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+B<-[MDR]    
+
+Opcode 96
+Mnemonic "MOVE B,A"
+Description "Move B reg. to A reg."
+MDR<-[B]    
+A<-[MDR]    
+
+Opcode 97
+Mnemonic "MOVE A,B"
+Description "Move A reg. to B reg."
+MDR<-[A]    
+B<-[MDR]    
+
+Opcode 98
+Mnemonic "MOVE (B),A"
+Description "Load A reg. with a reg. indirect oper."
+MAR<-[B]    
+MDR<-[M[MAR]]    
+A<-[MDR]    
+
+Opcode 99
+Mnemonic "MOVE (A),B"
+Description "Load B reg. with a reg. indirect oper."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+B<-[MDR]    
+
+Opcode 9a
+Mnemonic "MOVE B+addrword,A"
+Description "Load A reg from an indexed addr (index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+A<-[MDR]    
+
+Opcode 9b
+Mnemonic "MOVE A+addrword,B"
+Description "Load B reg from an indexed addr (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+B<-[MDR]    
+
+Opcode a2
+Mnemonic "MOVE A,addrword"
+Description "Store the A reg. in memory at a direct addr"
+MAR<-[MDR]    
+MDR<-[A]    
+M[MAR]<-[MDR]    
+
+Opcode a3
+Mnemonic "MOVE B,addrword"
+Description "Store the B reg. in memory at a direct addr"
+MAR<-[MDR]    
+MDR<-[B]    
+M[MAR]<-[MDR]    
+
+Opcode a4
+Mnemonic "MOVE A,(addrword)"
+Description "Store reg. A at a mem. indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[A]    
+M[MAR]<-[MDR]    
+
+Opcode a5
+Mnemonic "MOVE B,(addrword)"
+Description "Store reg. B at a mem. indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[B]    
+M[MAR]<-[MDR]    
+
+Opcode a6
+Mnemonic "MOVE #dataword,SP"
+Description "Move an immediate oper. into SP"
+SP<-[MDR]    
+
+Opcode a7
+Mnemonic "MOVE addrword,SP"
+Description "Load reg. SP from a direct addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+SP<-[MDR]    
+
+Opcode a8
+Mnemonic "MOVE A,(B)"
+Description "Store A reg. at an addr held in B"
+MAR<-[B]    
+MDR<-[A]    
+M[MAR]<-[MDR]    
+
+Opcode a9
+Mnemonic "MOVE B,(A)"
+Description "Store B reg. at an addr held in A"
+MAR<-[A]    
+MDR<-[B]    
+M[MAR]<-[MDR]    
+
+Opcode aa
+Mnemonic "MOVE A,B+addrword"
+Description "Store A reg. at an indexed addr (index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[A]    
+M[MAR]<-[MDR]    
+
+Opcode ab
+Mnemonic "MOVE B,A+addrword"
+Description "Store B reg. at an indexed addr (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[B]    
+M[MAR]<-[MDR]    
+
+Opcode ac
+Mnemonic "MOVE (addrword),SP"
+Description "Load reg. SP from an indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+SP<-[MDR]    
+
+Opcode ad
+Mnemonic "MOVE A,SP"
+Description "Move A reg. to SP reg."
+MDR<-[A]    
+SP<-[MDR]    
+
+Opcode ae
+Mnemonic "MOVE B,SP"
+Description "Move B reg. to SP reg."
+MDR<-[B]    
+SP<-[MDR]    
+
+Opcode b0
+Mnemonic "BCC #disword"
+Description "Branch on carry clear to a PC relative addr"
+if(PSR(c)==0)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode b1
+Mnemonic "BCS #disword"
+Description "Branch on carry set to a PC relative addr"
+if(PSR(c)==1)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode b2
+Mnemonic "BCC addrword"
+Description "Branch to a direct addr if carry flag clear (C=0)"
+if(PSR(c)==0)    
+PC<-[MDR]    
+
+Opcode b3
+Mnemonic "BCS addrword"
+Description "Branch to a direct addr if carry flag set (C=1)"
+if(PSR(c)==1)    
+PC<-[MDR]    
+
+Opcode b4
+Mnemonic "BCC (addrword)"
+Description "Branch to an indirect addr if carry flag is clear"
+if(PSR(c)==0)    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode b5
+Mnemonic "BCS (addrword)"
+Description "Branch to an indirect addr if carry flag is set"
+if(PSR(c)==1)    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode b8
+Mnemonic "BPL #disword"
+Description "Branch on negative clear to a PC relative addr"
+if(PSR(n)==0)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode b9
+Mnemonic "BMI #disword"
+Description "Branch on negative set to a PC relative addr"
+if(PSR(n)==1)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode ba
+Mnemonic "BPL addrword"
+Description "Branch to a direct addr if negative flag clear (N=0)"
+if(PSR(n)==0)    
+PC<-[MDR]    
+
+Opcode bb
+Mnemonic "BMI addrword"
+Description "Branch to a direct addr if negative flag set (N=1)"
+if(PSR(n)==1)    
+PC<-[MDR]    
+
+Opcode bc
+Mnemonic "BPL (addrword)"
+Description "Branch to an indirect addr if negative flag is clear"
+if(PSR(n)==0)    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode bd
+Mnemonic "BMI (addrword)"
+Description "Branch to an indirect addr if negative flag is set"
+if(PSR(n)==1)    
+MAR<-[MDR]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode c0
+Mnemonic "BNE #disword"
+Description "Branch on zero clear to a PC relative addr"
+if(PSR(z)==0)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode c1
+Mnemonic "BEQ #disword"
+Description "Branch on zero set to a PC relative addr"
+if(PSR(z)==1)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode c2
+Mnemonic "BNE addrword"
+Description "Branch to a direct addr if zero flag clear (Z=0)"
+if(PSR(z)==0)    
+PC<-[MDR]    
+
+Opcode c3
+Mnemonic "BEQ addrword"
+Description "Branch to a direct addr if zero flag set (Z=1)"
+if(PSR(z)==1)    
+PC<-[MDR]    
+
+Opcode c4
+Mnemonic "BNE (addrword)"
+Description "Branch to an indirect addr if zero flag is clear"
+if(PSR(z)==0)    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode c5
+Mnemonic "BEQ (addrword)"
+Description "Branch to an indirect addr if zero flag is set"
+if(PSR(z)==1)    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode c8
+Mnemonic "BVC #disword"
+Description "Branch on no overflow to a PC relative addr"
+if(PSR(v)==0)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode c9
+Mnemonic "BVS #disword"
+Description "Branch on overflow to a PC relative addr"
+if(PSR(v)==1)    
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode ca
+Mnemonic "BVC addrword"
+Description "Branch to a direct addr if overflow flag clear (V=0)"
+if(PSR(v)==0)    
+PC<-[MDR]    
+
+Opcode cb
+Mnemonic "BVS addrword"
+Description "Branch to a direct addr if overflow flag set (V=1)"
+if(PSR(v)==1)    
+PC<-[MDR]    
+
+Opcode cc
+Mnemonic "BVC (addrword)"
+Description "Branch to an indirect addr if overflow flag is clear"
+if(PSR(v)==0)    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode cd
+Mnemonic "BVS (addrword)"
+Description "Branch to an indirect addr if overflow flag is set"
+if(PSR(v)==1)    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode d0
+Mnemonic "JSR addrword"
+Description "Jump to subroutine at a direct addr"
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+ALUx<-[PC]             }
+ALUr=[ALUx]-1          }
+MAR<-[ALUr]            } go back for the operand
+MDR<-[M[MAR]]          }
+PC<-[MDR]              }
+
+Opcode d1
+Mnemonic "JSR (addrword)"
+Description "Jump to subroutine at an indirect addr"
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+ALUx<-[PC]             }
+ALUr=[ALUx]-1          }
+MAR<-[ALUr]            } go back for the operand
+MDR<-[M[MAR]]          }
+MAR<-[MDR]             }
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode d2
+Mnemonic "JSR A"
+Description "Jump to subroutine at an addr held in the A reg."
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+MDR<-[A]    
+PC<-[MDR]    
+
+Opcode d3
+Mnemonic "JSR B"
+Description "Jump to subroutine at an addr held in the B reg."
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+PC<-[B]    
+
+Opcode d4
+Mnemonic "JSR (A)"
+Description "Jump to subroutine at an indirect addr held in the A reg."
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+MAR<-[A]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode d5
+Mnemonic "JSR (B)"
+Description "Jump to subroutine at an indirect addr held in the B reg."
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+MAR<-[B]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode d6
+Mnemonic "JSR A+addrword"
+Description "Jump to subroutine at an indexed addr (index in A)"
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+ALUx<-[PC]             }
+ALUr=[ALUx]-1          }
+MAR<-[ALUr]            } go back for the operand
+MDR<-[M[MAR]]          }
+ALUy<-[MDR]            }
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode d7
+Mnemonic "JSR B+addrword"
+Description "Jump to subroutine at an indexed addr (index in B)"
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+ALUx<-[PC]             }
+ALUr=[ALUx]-1          }
+MAR<-[ALUr]            } go back for the operand
+MDR<-[M[MAR]]          }
+ALUy<-[MDR]            }
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode d8
+Mnemonic "JSR #disword"
+Description "Jump to subroutine at a PC relative addr"
+ALUx<-[PC]             }
+MDR<-[ALUx]            }     write PC
+MAR<-[SP]              }     to the stack
+M[MAR]<-[MDR]          }
+ALUx<-[SP]                }  decrement
+ALUr=[ALUx]-1             }  SP
+SP<-[ALUr]                }
+ALUx<-[PC]             }
+ALUr=[ALUx]-1          }
+MAR<-[ALUr]            } go back for the operand
+MDR<-[M[MAR]]          }
+ALUr=[ALUx]+1          ALUx still contains PC
+ALUx<-[ALUr]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode e0
+Mnemonic "JMP addrword"
+Description "Jump to a direct addr"
+PC<-[MDR]    
+
+Opcode e1
+Mnemonic "JMP (addrword)"
+Description "Jump to an indirect addr"
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+MAR<-[MDR]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode e2
+Mnemonic "JMP A"
+Description "Jump to an addr held in the A reg."
+MDR<-[A]    
+PC<-[MDR]    
+
+Opcode e3
+Mnemonic "JMP B"
+Description "Jump to an addr held in the B reg."
+PC<-[B]    
+
+Opcode e4
+Mnemonic "JMP (A)"
+Description "Jump to a reg. indirect addr."
+MAR<-[A]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode e5
+Mnemonic "JMP (B)"
+Description "Jump to a reg. indirect addr"
+MAR<-[B]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode e6
+Mnemonic "JMP A+addrword"
+Description "Jump to an indexed addr (index in A)"
+ALUy<-[MDR]    
+ALUx<-[A]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode e7
+Mnemonic "JMP B+addrword"
+Description "Jump to an indexed addr (index in B)"
+ALUy<-[MDR]    
+ALUx<-[B]    
+ALUr=[ALUx]+[ALUy]    
+MAR<-[ALUr]    
+MDR<-[M[MAR]]    
+PC<-[MDR]    
+
+Opcode e8
+Mnemonic "JMP #disword"
+Description "Jump to a PC relative addr"
+ALUx<-[PC]    
+ALUy<-[MDR]    
+ALUr=[ALUx]+[ALUy]    
+PC<-[ALUr]    
+
+Opcode f0
+Mnemonic "HALT"
+Description "Halt processor"
+HALT    
+
+Opcode f1
+Mnemonic "RTS"
+Description "Return from subroutine"
+ALUx<-[SP]            }     increment
+ALUr=[ALUx]+1         }     SP
+SP<-[ALUr]            }
+MAR<-[SP]                }  recover PC
+MDR<-[M[MAR]]            }  from the stack
+PC<-[MDR]                }
+
+Opcode f2
+Mnemonic "NOP"
+Description "No operation"
+NOP    
+
+Opcode ff
+Mnemonic "RTI"
+Description "Return from interrupt"
+*
+* Recover PC and PSR from the stack
+*
+ALUx<-[SP]            }     increment
+ALUr=[ALUx]+1         }     SP
+SP<-[ALUr]            }
+MAR<-[SP]                }  recover PC
+MDR<-[M[MAR]]            }  from the stack
+PC<-[MDR]                }
+ALUx<-[SP]            }     increment
+ALUr=[ALUx]+1         }     SP
+SP<-[ALUr]            }
+MAR<-[SP]                }  recover PSR
+MDR<-[M[MAR]]            }  from the stack
+PSR<-[MDR]               }
+
+Opcode f3
+Mnemonic "INTE"
+Description "Enable interrupts"
+PSR(E)=1    
+
+Opcode f4
+Mnemonic "INTD"
+Description "disable interrupts"
+PSR(E)=0    
+
+Opcode e9
+Mnemonic "MUL B,A"
+Description "Multiply A by B, result in A"
+ALUx<-[A]    
+ALUy<-[B]    
+ALUr=[ALUx]*[ALUy]    
+A<-[ALUr]    
+
+Opcode ea
+Mnemonic "DIV B,A"
+Description "Divide A by B, result in A"
+ALUx<-[A]    
+ALUy<-[B]    
+ALUr=[ALUx]/[ALUy]    
+A<-[ALUr]    
+
+Opcode eb
+Mnemonic "MOD B,A"
+Description "Mod of divide A by B, result in A"
+ALUx<-[A]    
+ALUy<-[B]    
+ALUr=[ALUx]%[ALUy]    
+A<-[ALUr]    
+
+Opcode ec
+Mnemonic "MOD B,#dataword"
+Description "Mod of divide B by dataword, result in B"
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]%[ALUy]    
+B<-[ALUr]    
+
+Opcode ed
+Mnemonic "DIV B,#dataword"
+Description "Divide B by dataword, result in B"
+ALUx<-[B]    
+ALUy<-[MDR]    
+ALUr=[ALUx]/[ALUy]    
+B<-[ALUr]    
+
+Opcode ee
+Mnemonic "DIV A,#dataword"
+Description "Divide A by dataword, result in A"
+ALUx<-[A]    
+ALUy<-[MDR]    
+ALUr=[ALUx]/[ALUy]    
+A<-[ALUr]    
+

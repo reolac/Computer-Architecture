@@ -1,0 +1,397 @@
+^0
+Aspen - Another Simple Processor Emulation
+
+Aspen contains the virtual processor JASP, and can be thought
+of as the command line JASPer.  It runs on both DOS and Linux
+systems.  
+
+Registers:                                           Flags:
+ PC INC MDR MAR A B SP ALUx ALUy ALU CU IR           Z C N V I E vec
+
+Commands:
+ qu*it he*lp ver*sion df .{reg} res*et .{flag} load mc*o md run t*race 
+ bf bm view about code fetch execute jumpers memupdate periph ioboard
+ vec
+
+ For help on a particular command type
+    help [command]
+
+ For command line arguments, type at the command prompt:
+    aspen /help
+*
+^1
+  qu*it | ex*it
+
+  Allows the user to terminate Aspen.
+*
+^2
+  he*lp | ?
+
+  If you're perverse enough to have typed this, you know what it means...
+*
+^3
+  ver*sion
+
+  Gives the current version of Aspen.
+*
+^4
+  df
+
+  Display formatted contents of registers and flags, all register
+  contents are given in hexadecimal, apart form the PSR where
+  individual flags are displayed in binary.
+*
+^5
+ .a {value}
+
+ Displays the contents of the register, if a value is given as a 
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^6
+ .b {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^7
+ .mar {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^8
+ .mdr {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^9
+ .inc {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^10
+ .pc {value}
+
+ Displays the contents of the register, if a value is given as a 
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^11
+ .alux {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^12
+ .aluy {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^13
+ .alu {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc &ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^14
+ res*et
+
+ Resets the processor.  All registers and flags are reset to zero.  Memory 
+ content is unaffected, apart from the ISR and OSR, which are reset.
+*
+^15
+ .cu {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^16
+ .ir {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^17
+ .n {value}
+ 
+ Displays the contents of the flag, if a value is given as a 
+ parameter the flag is updated with that value.  The value has to be 
+ either 1 or 0.
+*
+^18
+ .v {value}
+ 
+ Displays the contents of the flag, if a value is given as a 
+ parameter the flag is updated with that value.  The value has to be 
+ either 1 or 0.
+*
+^19
+ .z {value}
+ 
+ Displays the contents of the flag, if a value is given as a 
+ parameter the flag is updated with that value.  The value has to be 
+ either 1 or 0.
+*
+^20
+ .c {value}
+ 
+ Displays the contents of the flag, if a value is given as a 
+ parameter the flag is updated with that value.  The value has to be 
+ either 1 or 0.
+*
+^21
+ m*co {filename}
+
+ The contents of the microcode file will be loaded into the processor
+ memory.  Any locations not written to from the file will be undisturbed.
+*
+^22
+ l*oad {filename}
+
+ The contents of the macrocode file will be loaded into memory.
+*
+^23
+ md {Start Address} {Stop Address} [dis*assemble] [file={filename}]
+
+ View the contents of memory from the given location to the second
+ location.  If the disassemble parameter is present then the results 
+ will be disassembled.  If the file parameter is present then the
+ output will be sent to the file named.
+*
+^24
+ run | go
+
+ Start the processor.  The processor will stop on hitting a HALT
+ instruction, or when the Esc key is pressed (simulating a manual
+ halt of the processor).
+*
+^26
+ t*race
+
+ Run the given macrocode program one line of macrocode at a time.  After
+ each step the contents of all registers and flags are shown.
+*
+^27
+ bm {Start Address} {End Address} {Target Start Address}
+
+ block move
+*
+^28
+ bf {StartAddress} {EndAddress} {Value}
+
+ block fill
+*
+^29
+ view [file={filename}]
+
+ Lists the descriptions and mnemonics for all loaded microcodes.  If
+ the file parameter is present, then the output is sent to that file.
+*
+^33
+ About ASPEN
+
+ Aspen started out as just a way to test the JASP CPU that was being
+ incorporated into a new version of JASPer.  However, it soon emerged that
+ a JASP emulation running entirely in a command line mode could be useful in 
+ its own right.  It works really well when writing/debugging new programs
+ and instruction sets, in conjunction with the JASP assmembler.
+ 
+ Aspen compiles under DOS, Windows 95 (and later) command line and Linux.
+
+ Standard disclaimer:
+
+ The author of this package, and the distributors, cannot accept 
+ responsibility for any disruption, damage and/or loss to your data or 
+ computer system that may occur while using this package.
+
+*
+^34
+ .sp {value}
+
+ Displays the contents of the register, if a value is given as a
+ parameter the register is updated with that value.  Hex values are
+ default (or $ explicitly), ^ prior to the number indicates a decimal 
+ value, % indicates binary and @ indicates octal.
+
+ e.g.
+
+ .pc $ff     - updates the PC with the hex value FF
+ .mdr ^28    - updates the MDR with the decimal value 28
+ .alux @77   - updates the ALUx with the octal value 77
+ .mar %1011  - updates the MAR with the binary value 1011
+*
+^35
+ code {microcode}
+
+ Runs the given code, or reports that the code given was illegal. Valid codes
+ are the RTL statements as listed in appendix A of 'Fundamentals Of Computer 
+ Architecture'. Please note that this instruction is case sensitive.
+ 
+ For example,
+ 
+     code A<-[MDR]
+     
+will transfer the contents of the MDR into the A register.
+*
+^36
+ fe*tch
+ 
+ Runs a single fetch cycle.
+*
+^37
+ exec*ute
+
+ Runs a single execute cycle.
+*
+^38
+ju*mpers
+
+ Displays the status of the I/O board and the peripherals board.  It also
+ displays the amount of installed memory.
+*
+^39
+mem*update {value}
+
+ Displays the amount of installed memory.  If a value is also stated then
+ that amount of memory is installed.  The value must be a 16-bit value.
+ 
+ Note that the DOS version of Aspen can only install memory up to 0FFF,
+ while the linux version can have memory installed up to FFFF.
+*
+^40
+per*iph
+
+ Toggles the use of the peripherals board.  Use the 'jumpers' 
+ command to check installation.
+ 
+ Note that the peripherals board cannot be used in the DOS version of
+ Aspen.
+*
+^41
+io*board
+
+ Toggles the use of the I/O board.  Use the 'jumpers' command to 
+ check installation.
+*
+^42
+.i {value}
+ 
+ Displays the contents of the flag, if a value is given as a 
+ parameter the flag is updated with that value.  The value has to be 
+ either 1 or 0.
+*
+^43
+.e {value}
+ 
+ Displays the contents of the flag, if a value is given as a 
+ parameter the flag is updated with that value.  The value has to be 
+ either 1 or 0.
+*
+^44
+vec {value}
+
+ Displays the current interrupt vector, if a value is given between
+ 0 and 7 then the interrupt vector is updated.
+*
+

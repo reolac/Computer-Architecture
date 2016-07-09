@@ -1,0 +1,66 @@
+#-------------------------------------------------------------------------------
+#
+# JASP Assembler (c) 1999-2003 Mark S. Burrell
+# V1.1 (03-Jul-2003)
+#
+# Assembler input : book1.txt
+# Instruction set : instruct.mco
+# Assembler mode  : default
+#
+#-------------------------------------------------------------------------------
+#
+# Assembler Listing
+#
+#-------------------------------------------------------------------------------
+ORG $0000  # 0000 # 			ORG 0
+           # 0000 #
+9220       # 0000 # 			MOVE num1,A
+9321       # 0001 # 			MOVE num2,B
+8600       # 0002 # 			CMP B,A
+           # 0003 # 			BMI true
+#
+# Error -  This instruction does not match any instruction
+#          in the instruction set.  Check that the mnemonic
+#          is not mis-spelt and that the parameters are valid
+#          for your required instruction.
+#
+           # 0003 #
+           # 0003 # 			JMP end_if
+#
+# Error -  This instruction does not match any instruction
+#          in the instruction set.  Check that the mnemonic
+#          is not mis-spelt and that the parameters are valid
+#          for your required instruction.
+#
+           # 0003 #
+           # 0003 # 	true
+#
+# Error -  This instruction does not match any instruction
+#          in the instruction set.  Check that the mnemonic
+#          is not mis-spelt and that the parameters are valid
+#          for your required instruction.
+#
+           # 0003 #
+A320       # 0003 # 			MOVE B,num1
+A221       # 0004 # 			MOVE A,num2
+           # 0005 # 	end_if	HALT
+#
+# Error -  This instruction does not match any instruction
+#          in the instruction set.  Check that the mnemonic
+#          is not mis-spelt and that the parameters are valid
+#          for your required instruction.
+#
+           # 0005 #
+ORG $0020  # 0020 # 			ORG $20
+0045       # 0020 # num1 		DC.W $0045
+0088       # 0021 # num2 		DC.W $0088
+#
+#-------------------------------------------------------------------------------
+#
+# Symbol table
+#
+#  num1........................................ 0020
+#  num2........................................ 0021
+#
+# Assembler completed with 4 error(s)
+#

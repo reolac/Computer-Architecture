@@ -1,0 +1,43 @@
+			ORG 0
+			MOVE #$D0,SP
+	
+			MOVE #$00,A
+			PUSH A
+	
+			MOVE #list,A
+	
+pushloop	MOVE (A),B
+			ADD B,(A)
+			CMP #$0,B
+			
+			BEQ end_push
+			PUSH B
+			
+			ADD #$01,A
+			JMP pushloop
+
+end_push	MOVE #list,A
+
+poploop		POP B
+			CMP #$0,B
+			
+			BEQ end_pop
+			MOVE B,(A)
+			
+			ADD #$01,A
+			JMP poploop
+
+end_pop		HALT	
+		
+	
+list 	DC.W 0001
+		DC.W 0002
+		DC.W 0003
+		DC.W 0004
+		DC.W 0005
+		DC.W 0006
+		DC.W 0007
+		DC.W 0008
+		DC.W 0009
+		DC.W 000A
+		DC.W 0000

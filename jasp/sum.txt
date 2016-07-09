@@ -1,0 +1,8 @@
+		MOVE #^03,A
+		MOVE #^01,B
+for		CMP  #^99,B
+main	BMI  done 
+		ADD A,B
+		ADD #^02,A      
+		JMP main
+done	HALT      

@@ -1,0 +1,174 @@
+*-----------------------------------------------------------------------------
+* Title    : basicio.lib
+* Revision : 1.1
+* Author   : Mark Burrell
+* Date     : 03-Jul-2003
+*-----------------------------------------------------------------------------
+* Description
+* -----------
+* This library defines a number of useful functions and constants 
+* for use within JASP programs.
+*
+* It can be used by including the following statement in your
+* JASP code :-
+*
+*       USE "basicio.lib"
+*
+* This file is best suited for programs to fit in memory between
+* 00 and DF.
+*
+* More functions are available in the advancedio.lib file, but that
+* library is too large for programs that need to fit in memory
+* between 00 and DF, and can only be used with the 32-bit instruction
+* sets.
+*
+* The Implemented Routines
+* ------------------------
+*
+* putstring - prints packed strings, address has to be in register A.
+* putchar   - prints a single character from lo-byte of register B.
+* putword   - prints a word held as 4 hex chars (from A)
+* putbyte   - prints a word held as 2 hex chars (from lo-byte of A)
+* getchar   - get a character from the keyboard, char in A register.
+* newline   - print a CR/LF pair
+*
+*-----------------------------------------------------------------------------
+* Constants
+*-----------------------------------------------------------------------------
+* Memory mapped I/O
+IDR       EQU $E0          * Input Data Register
+ISR       EQU $E1          * Input Status Register
+ODR       EQU $E2          * Output Data Register
+OSR       EQU $E3          * Output Status Register
+
+* Time subsystem
+_SECS     EQU $E8          * Current seconds
+_MINS     EQU $E9          * Current minutes
+_HOURS    EQU $EA          * Current hours
+_DAY      EQU $EB          * Current day
+_MONTH    EQU $EC          * Current month
+_YEAR     EQU $ED          * Current year
+_TIMER    EQU $EE          * Current timer setting
+
+
+*-----------------------------------------------------------------------------
+* putstring routine - prints packed strings
+* expects the start address in A
+*-----------------------------------------------------------------------------
+putstring MOVE (A),B       * move a string word into B
+          SWAP B           * swap the bytes
+          PUSH A           * save A on the stack
+          MOVE #$ff,A      * place $00ff in A
+          AND  A,B         * mask B with A
+          POP  A           * restore A
+          CMP  #$00,B      * check if B lo-byte is 0
+          BEQ  _done       *   and finish if it is
+          JSR  putchar     * jump to putchar
+          MOVE (A),B       * move the string word into B again
+          PUSH A           * save A on the stack
+          MOVE #$ff,A      * place $00ff in A
+          AND  A,B         * mask B with A
+          POP  A           * restore A
+          CMP  #$00,B      * check if B lo-byte is 0
+          BEQ  _done       *   and finish if it is
+          JSR  putchar     * jump to putchar
+          ADD  #$01,A      * add 1 to the string pointer
+          JMP  putstring   * go and read the next word
+_done     RTS              * return from subroutine
+
+*-----------------------------------------------------------------------------
+* putchar routine (char in lo-byte of B)
+*-----------------------------------------------------------------------------
+putchar   PUSH A           * save A on the stack
+_putch1   MOVE OSR,A       * move OSR to A
+          CMP  #$00,A      * Can we print ?
+          BEQ  _putch1     * If not, grab OSR again
+          MOVE B,ODR       * otherwise print lo-byte of B
+          POP  A           * retrieve a from the stack
+          RTS              * return from subroutine
+                             
+*-----------------------------------------------------------------------------
+* getchar (value stored in A)
+*-----------------------------------------------------------------------------
+getchar   MOVE ISR,A       * move ISA to A
+          CMP  #$00,A      * if it is 0 we have no char
+          BEQ  getchar     * so branch to check again
+          MOVE IDR,A       * when we have a char put it in A
+          RTS              * return from subroutine
+
+*-----------------------------------------------------------------------------
+* newline
+*-----------------------------------------------------------------------------
+newline   PUSH B           * save B on stack
+          MOVE #$0A,B      * load LF
+          JSR  putchar     * print it
+          MOVE #$0D,B      * load CR
+          JSR  putchar     * print it
+          POP  B           * restore B
+          RTS              * return from subroutine
+          
+*-----------------------------------------------------------------------------
+* putword (value in  A)
+*-----------------------------------------------------------------------------
+putword   SWAP A           * swap bytes in A
+          JSR putbyte      * print the lo-byte
+          SWAP A           * swap bytes again in A
+          JSR putbyte      * print the lo-byte
+          RTS              * return from subroutine
+          
+*-----------------------------------------------------------------------------
+* putbyte (value in lo-byte of A)
+*-----------------------------------------------------------------------------
+putbyte
+        PUSH A             * save A on the stack
+        PUSH B             * save B on the stack
+        AND  _pb_andmask,A * AND A with $00ff
+        MOVE #$00,B        * set B to 0
+        MOVE B,_pb_btens   * clear the tens variable
+        MOVE A,_pb_bunits  * set the units variable to A
+_pb_bdecloop 
+        CMP  #$10,A        * compare A with 16
+        BMI  _pb_bprint    * goto print if less than 16
+        SUB  #$10,A        * otherwise A = A-16
+        MOVE _pb_btens,B   * B = tens  }
+        ADD  #$01,B        * B++       } i.e tens++
+        MOVE B,_pb_btens   * tens = B  }
+        MOVE A,_pb_bunits  * A = units
+        JMP  _pb_bdecloop  * goto decloop 
+_pb_bprint                 *
+        MOVE _pb_btens,A   * move tens into A
+        CMP  #$0A,A        * compare with 10?
+        BPL  _pb_over      *   yes, go to next section
+        ADD  #$30,A        * add 30hex (i.e. its a char number now)
+        JMP _pb_nover      * now deal with units
+_pb_over                   *
+        ADD  #$37,A        * add $37 to get ASCII
+_pb_nover                  *
+        PUSH B             * save B on the stack
+        MOVE A,B           * move A into B
+        JSR  putchar       * print it
+        POP  B             * restore B
+        MOVE _pb_bunits,A  * move units to A
+        CMP  #$0A,A        * compare with 10?
+        BPL  _pb_over2     *   over, so go to next section
+        ADD  #$30,A        * add 30hex (i.e. its a char number now)
+        JMP _pb_nover2     *
+_pb_over2                  *
+        ADD  #$37,A        * add $37 to get ASCII
+_pb_nover2                 *
+        PUSH B             * save B on the stack
+        MOVE A,B           * move A into B
+        JSR  putchar       * print it
+        POP  B             * restore B
+        POP  B             * restore B
+        POP  A             * restore A
+        RTS                * return from subroutine
+                           *
+* constant definition      *
+_pb_andmask  DC.W $00ff    *
+                           *
+* data storage             *
+_pb_btens    DS.W 1        * storage for tens variable
+_pb_bunits   DS.W 1        * storage for units variable
+
+*-----------------------------------------------------------------------------

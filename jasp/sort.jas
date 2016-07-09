@@ -1,0 +1,92 @@
+#-------------------------------------------------------------------------------
+#
+# JASP Assembler (c) 1999-2003 Mark S. Burrell
+# V1.1 (03-Jul-2003)
+#
+# Assembler input : sort.txt
+# Instruction set : instruct.mco
+# Assembler mode  : default
+#
+#-------------------------------------------------------------------------------
+#
+# Assembler Listing
+#
+#-------------------------------------------------------------------------------
+9229       # 0000 # 		MOVE high,A		* moves high into A
+9328       # 0001 # 		MOVE middle,B	* moves middle into B
+           # 0002 #
+8700       # 0002 # while 	CMP A,B			* compares A with B
+           # 0003 #
+C305       # 0003 # 		BEQ true		* if A is greater than B then true will run
+BB1A       # 0004 # 		BMI false		* if B is greater than A then false will run
+           # 0005 #
+8D00       # 0005 # true	PUSH B			* clear B
+9327       # 0006 # 		MOVE low,B		* move low onto B
+           # 0007 #
+8700       # 0007 # while2 	CMP A,B			* compares A with B
+C30A       # 0008 # 		BEQ true2		* if A is greater than B then true2 will run
+BB11       # 0009 # 		BMI false2		* if B is greater than A then false2 will run
+           # 000A #
+8C00       # 000A # true2 	PUSH A			* clear A
+9228       # 000B # 		MOVE middle,A	* moves middle onto A
+8700       # 000C # while3 	CMP A,B			* compares A with B
+C30E       # 000D # 		BEQ false3		* if A is greater than B then false3 will run
+A328       # 000E # false3	MOVE B,middle	* move B to middle
+A227       # 000F # 		MOVE A,low		* move A to low
+E026       # 0010 # 		JMP done		* jump to the end of the program
+           # 0011 #
+A227       # 0011 # false2 	MOVE A,low		* move A to low
+A329       # 0012 # 		MOVE B,high		* move B to high
+9228       # 0013 # 		MOVE middle,A	* move middle to A
+9327       # 0014 # 		MOVE low,B		* move low to B
+8700       # 0015 # while4 	CMP A,B			* compares A with B
+BB17       # 0016 # 		BMI false4		* if B is greater than A then false4 will run
+A227       # 0017 # false4	MOVE A,low		* move A to low
+A328       # 0018 # 		MOVE B,middle	* move B to middle
+E026       # 0019 # 		JMP done		* jump to the end of the program
+           # 001A #
+8D00       # 001A # false 	PUSH B			* clear B
+9327       # 001B # 		MOVE low,B		* move low to B
+8700       # 001C # while5 	CMP A,B			* compare A with B
+C31E       # 001D # 		BEQ true3		* if A is greater than B then true3 will run
+8D00       # 001E # true3	PUSH B			* clear B
+9329       # 001F # 		MOVE high,B		* move high onto B
+A329       # 0020 # 		MOVE B,high		* move B onto high
+E026       # 0021 # 		JMP done		* jump to the end of the program
+           # 0022 #
+BB23       # 0022 # 		BMI false5		* if B is greater than A then false5 will run
+A227       # 0023 # false5  MOVE A,low		* move A onto low
+A329       # 0024 # 		MOVE B,high		* move B onto high
+E026       # 0025 # 		JMP done		* jump to the end of the program
+           # 0026 #
+           # 0026 #
+F000       # 0026 # done	HALT			* end the program
+           # 0027 #
+0061       # 0027 # low 	DC.W 0061		* stored variable
+0033       # 0028 # middle 	DC.W 0033		* stored variable
+0017       # 0029 # high	DC.W 0017		* stored variable
+#
+#-------------------------------------------------------------------------------
+#
+# Symbol table
+#
+#  done........................................ 0026
+#  false....................................... 001A
+#  false2...................................... 0011
+#  false3...................................... 000E
+#  false4...................................... 0017
+#  false5...................................... 0023
+#  high........................................ 0029
+#  low......................................... 0027
+#  middle...................................... 0028
+#  true........................................ 0005
+#  true2....................................... 000A
+#  true3....................................... 001E
+#  while....................................... 0002
+#  while2...................................... 0007
+#  while3...................................... 000C
+#  while4...................................... 0015
+#  while5...................................... 001C
+#
+# Assembler completed successfully.
+#

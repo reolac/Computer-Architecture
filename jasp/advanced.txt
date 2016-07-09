@@ -1,0 +1,181 @@
+00 ADD  #dataword,A   Add to reg. A an immediate oper.
+01 ADD  #dataword,B   Add to reg. B an immediate oper.
+02 ADD  addrword,A    Add to reg. A from a direct addr
+03 ADD  addrword,B    Add to reg. B from a direct addr
+04 ADD  (addrword),A  Add to reg. A from an indirect addr
+05 ADD  (addrword),B  Add to reg. B from an indirect addr.
+06 ADD  B,A           Add B reg. to contents of A reg.
+07 ADD  A,B           Add A reg. to contents of B reg.
+08 ADD  (B),A         Add B reg. indirect oper. to A reg.
+09 ADD  (A),B         Add A reg. indirect oper. to B reg.
+0A ADD  B+addrword,A  Add to reg. A from an indexed addr (index in B)
+0B ADD  A+addrword,B  Add to reg. B from an indexed addr (index in A)
+10 ADC  #dataword,A   Add with carry to reg. A an immediate oper.
+11 ADC  #dataword,B   Add with carry to reg. B an immediate oper.
+12 ADC  addrword,A    Add with carry to reg. A from a direct addr
+13 ADC  addrword,B    Add with carry to reg. B from a direct addr
+14 ADC  (addrword),A  Add with carry to reg. A from an indirect addr
+15 ADC  (addrword),B  Add with carry to reg. B from an indirect addr
+16 ADC  B,A           Add with carry to A reg. from B reg.
+17 ADC  A,B           Add with carry to B reg. from A reg.
+18 ADC  (B),A         Add with carry to B reg. a reg. indirect oper.
+19 ADC  (A),B         Add with carry to B reg. a reg. indirect oper.
+1A ADC  B+addrword,A  Add with carry to reg. A an indexed oper. (index in B)
+1B ADC  A+addrword,B  Add with carry to reg. B an indexed oper. (index in A)
+20 SUB  #dataword,A   Subtract an immediate oper. from A reg
+21 SUB  #dataword,B   Subtract an immediate oper. from B reg
+22 SUB  addrword,A    Subtract from reg. A a direct oper.
+23 SUB  addrword,B    Subtract from reg. B a direct oper.
+24 SUB  (addrword),A  Subtract from reg. A an indirect oper.
+25 SUB  (addrword),B  Subtract from reg. B an indirect oper.
+26 SUB  B,A           Subtract from reg. A the contents of reg. B
+27 SUB  A,B           Subtract from reg. B the contents of reg. A
+28 SUB  (B),A         Subtract from reg. A a reg. indirect oper.
+29 SUB  (A),B         Subtract from reg. B a reg. indirect oper.
+2A SUB  B+addrword,A  Subtract an indexed oper. from the reg. A (index in B)
+2B SUB  A+addrword,B  Subtract an indexed oper. from the reg. B (index in A)
+32 SHL  addrword      Shift left a memory direct oper.
+34 SHL  (addrword)    Shift left a memory indirect oper.
+36 SHL  A             Shift left reg. A
+37 SHL  B             Shift left reg. B
+38 SHL  (A)           Shift left a reg. indirect oper., addr in A
+39 SHL  (B)           Shift left a reg. indirect oper., addr in B
+3A SHL  A+addrword    Shift left an indexed oper. (index in A)
+3B SHL  B+addrword    Shift left an indexed oper. (index in B)
+42 SHR  addrword      Shift right a direct oper.
+44 SHR  (addrword)    Shift right a memory indirect oper.
+46 SHR  A             Shift right the contents of reg. A
+47 SHR  B             Shift right the contents of reg. B
+48 SHR  (A)           Shift right a reg. indirect oper.
+49 SHR  (B)           Shift right a reg. indirect oper.
+4A SHR  A+addrword    Shift right a memory indexed oper. (index in A)
+4B SHR  B+addrword    Shift right a memory indexed oper. (Index in B)
+50 AND  #dataword,A   AND operation on A reg and an immediate oper.
+51 AND  #dataword,B   AND operation on B reg and an immediate oper.
+52 AND  addrword,A    AND operation on A and a direct oper.
+53 AND  addrword,B    AND operation on B and a direct oper.
+54 AND  (addrword),A  AND operation on A and an indirect oper.
+55 AND  (addrword),B  AND operation on B and an indirect oper.
+56 AND  B,A           AND on A and B, result in A
+57 AND  A,B           AND on B and A, result in B
+58 AND  (B),A         AND on A and a reg. indirect oper.
+59 AND  (A),B         AND on B and a reg. indirect oper.
+5A AND  B+addrword,A  AND operation on A and an indexed oper.
+5B AND  A+addrword,B  AND operation on B and an indexed oper.
+60 OR   #dataword,A   OR operation on A reg and an immediate oper.
+61 OR   #dataword,B   OR operation on B reg and an immediate oper.
+62 OR   addrword,A    OR operation on A and a direct oper.
+63 OR   addrword,B    OR operation on B and a direct oper.
+64 OR   (addrword),A  OR operation on A and an indirect oper.
+65 OR   (addrword),B  OR operation on B and an indirect oper.
+66 OR   B,A           OR on A and B, result in A
+67 OR   A,B           OR on B and A, result in B
+68 OR   (B),A         OR on A and a reg. indirect oper.
+69 OR   (A),B         OR on B and a reg. indirect oper.
+6A OR   B+addrword,A  OR operation on A and an indexed oper.
+6B OR   A+addrword,B  OR operation on B and an indexed oper.
+72 NOT  addrword      NOT operation on a direct oper.
+74 NOT  (addrword)    NOT operation on an indirect oper.
+76 NOT  A             NOT operation on A reg.
+77 NOT  B             NOT operation on B reg.
+78 NOT  (A)           NOT on a reg. indirect oper. (addr in A)
+79 NOT  (B)           NOT on a reg. indirect oper. (addr in B)
+7A NOT  A+addrword    NOT on an indexed oper. (index in A)
+7B NOT  B+addrword    NOT on an indexed oper. (index in B)
+7C SWAP A             Swap A register lo and hi bytes
+7D SWAP B             Swap B register lo and hi bytes
+80 CMP  #dataword,A   Compare an immediate oper. with A reg
+81 CMP  #dataword,B   Compare an immediate oper. with B reg
+82 CMP  addrword,A    Compare a direct oper. with A reg.
+83 CMP  addrword,B    Compare a direct oper. with B reg.
+84 CMP  (addrword),A  Compare an indirect oper. with A reg.
+85 CMP  (addrword),B  Compare an indirect oper. with B reg.
+86 CMP  B,A           Compare A and B reg.
+87 CMP  A,B           Compare B and A reg.
+88 CMP  (B),A         Compare A with a reg. indirect oper.
+89 CMP  (A),B         Compare B with a reg. indirect oper.
+8A CMP  B+addrword,A  Compare with A an indexed oper.
+8B CMP  A+addrword,B  Compare with B an indexed oper.
+8C PUSH A             Push A onto the stack
+8D PUSH B             Push B onto the stack
+8E POP  A             Pop A from the stack
+8F POP  B             Pop B from the stack
+90 MOVE #dataword,A   Move an immediate oper. into A
+91 MOVE #dataword,B   Move an immediate oper. into B
+92 MOVE addrword,A    Load reg. A from a direct addr
+93 MOVE addrword,B    Load reg. B from a direct addr
+94 MOVE (addrword),A  Load reg. A from an indirect addr
+95 MOVE (addrword),B  Load reg. B from an indirect addr
+96 MOVE B,A           Move B reg. to A reg.
+97 MOVE A,B           Move A reg. to B reg.
+98 MOVE (B),A         Load A reg. with a reg. indirect oper.
+99 MOVE (A),B         Load B reg. with a reg. indirect oper.
+9A MOVE B+addrword,A  Load A reg from an indexed addr (index in B)
+9B MOVE A+addrword,B  Load B reg from an indexed addr (index in A)
+A2 MOVE A,addrword    Store the A reg. in memory at a direct addr
+A3 MOVE B,addrword    Store the B reg. in memory at a direct addr
+A4 MOVE A,(addrword)  Store reg. A at a mem. indirect addr
+A5 MOVE B,(addrword)  Store reg. B at a mem. indirect addr
+A6 MOVE #dataword,SP  Move an immediate oper. into SP
+A7 MOVE addrword,SP   Load reg. SP from a direct addr
+A8 MOVE A,(B)         Store A reg. at an addr held in B
+A9 MOVE B,(A)         Store B reg. at an addr held in A
+AA MOVE A,B+addrword  Store A reg. at an indexed addr (index in B)
+AB MOVE B,A+addrword  Store B reg. at an indexed addr (index in A)
+AC MOVE (addrword),SP Load reg. SP from an indirect addr
+AD MOVE A,SP          Move A reg. to SP reg.
+AE MOVE B,SP          Move B reg. to SP reg.
+B0 BCC  #disword      Branch on carry clear to a PC relative addr
+B1 BCS  #disword      Branch on carry set to a PC relative addr
+B2 BCC  addrword      Branch to a direct addr if carry flag clear (C=0)
+B3 BCS  addrword      Branch to a direct addr if carry flag set (C=1)
+B4 BCC  (addrword)    Branch to an indirect addr if carry flag is clear
+B5 BCS  (addrword)    Branch to an indirect addr if carry flag is set
+B8 BPL  #disword      Branch on negative clear to a PC relative addr
+B9 BMI  #disword      Branch on negative set to a PC relative addr
+BA BPL  addrword      Branch to a direct addr if negative flag clear (N=0)
+BB BMI  addrword      Branch to a direct addr if negative flag set (N=1)
+BC BPL  (addrword)    Branch to an indirect addr if negative flag is clear
+BD BMI  (addrword)    Branch to an indirect addr if negative flag is set
+C0 BNE  #disword      Branch on zero clear to a PC relative addr
+C1 BEQ  #disword      Branch on zero set to a PC relative addr
+C2 BNE  addrword      Branch to a direct addr if zero flag clear (Z=0)
+C3 BEQ  addrword      Branch to a direct addr if zero flag set (Z=1)
+C4 BNE  (addrword)    Branch to an indirect addr if zero flag is clear
+C5 BEQ  (addrword)    Branch to an indirect addr if zero flag is set
+C8 BVC  #disword      Branch on no overflow to a PC relative addr
+C9 BVS  #disword      Branch on overflow to a PC relative addr
+CA BVC  addrword      Branch to a direct addr if overflow flag clear (V=0)
+CB BVS  addrword      Branch to a direct addr if overflow flag set (V=1)
+CC BVC  (addrword)    Branch to an indirect addr if overflow flag is clear
+CD BVS  (addrword)    Branch to an indirect addr if overflow flag is set
+D0 JSR  addrword      Jump to subroutine at a direct addr
+D1 JSR  (addrword)    Jump to subroutine at an indirect addr
+D2 JSR  A             Jump to subroutine at an addr held in the A reg.
+D3 JSR  B             Jump to subroutine at an addr held in the B reg.
+D4 JSR  (A)           Jump to subroutine at an indirect addr held in the A reg.
+D5 JSR  (B)           Jump to subroutine at an indirect addr held in the B reg.
+D6 JSR  A+addrword    Jump to subroutine at an indexed addr (index in A)
+D7 JSR  B+addrword    Jump to subroutine at an indexed addr (index in B)
+D8 JSR  #disword      Jump to subroutine at a PC relative addr
+E0 JMP  addrword      Jump to a direct addr
+E1 JMP  (addrword)    Jump to an indirect addr
+E2 JMP  A             Jump to an addr held in the A reg.
+E3 JMP  B             Jump to an addr held in the B reg.
+E4 JMP  (A)           Jump to a reg. indirect addr.
+E5 JMP  (B)           Jump to a reg. indirect addr
+E6 JMP  A+addrword    Jump to an indexed addr (index in A)
+E7 JMP  B+addrword    Jump to an indexed addr (index in B)
+E8 JMP  #disword      Jump to a PC relative addr
+E9 MUL  B,A           Multiply A by B, result in A
+EA DIV  B,A           Divide A by B, result in A
+EB MOD  B,A           Mod of divide A by B, result in A
+EC MOD  B,#dataword   Mod of divide B by dataword, result in B
+ED DIV  B,#dataword   Divide B by dataword, result in B
+EE DIV  A,#dataword   Divide A by dataword, result in A
+F0 HALT               Halt processor
+F1 RTS                Return from subroutine
+F2 NOP                No operation
+F3 INTE               Enable interrupts
+F4 INTD               disable interrupts
+FA TRAP #dataword     Software interrupt mechanism

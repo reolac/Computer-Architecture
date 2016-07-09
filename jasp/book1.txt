@@ -1,0 +1,18 @@
+			ORG 0
+
+			MOVE num1,A
+			MOVE num2,B
+			CMP B,A
+			BMI true
+
+			JMP end_if
+
+	true
+
+			MOVE B,num1
+			MOVE A,num2
+	end_if	HALT
+
+			ORG $20
+num1 		DC.W $0045
+num2 		DC.W $0088

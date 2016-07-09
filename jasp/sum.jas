@@ -1,0 +1,33 @@
+#-------------------------------------------------------------------------------
+#
+# JASP Assembler (c) 1999-2003 Mark S. Burrell
+# V1.1 (03-Jul-2003)
+#
+# Assembler input : sum.txt
+# Instruction set : instruct.mco
+# Assembler mode  : default
+#
+#-------------------------------------------------------------------------------
+#
+# Assembler Listing
+#
+#-------------------------------------------------------------------------------
+9001       # 0000 # 		MOVE #^03,A		* stores 3 in A
+9100       # 0001 # for		MOVE #^01,B		* stores 1 in B
+8065       # 0002 # loop	CMP  #^99,A		* compares 99 to a
+C307       # 0003 # 		BMI  end_for	* checks to see if 99 < a if it is it will end the program
+0700       # 0004 # 		ADD A,B			* adds A to B and stores it in B
+0002       # 0005 # 		ADD #^02,A      * increments A by 2
+E002       # 0006 # 		JMP loop		* loops the program until the end_for condition is met
+F000       # 0007 # end_for	HALT			* stops the program if the end_for condition is met
+#
+#-------------------------------------------------------------------------------
+#
+# Symbol table
+#
+#  end_for..................................... 0007
+#  for......................................... 0002
+#  loop........................................ 0003
+#
+# Assembler completed successfully.
+#do

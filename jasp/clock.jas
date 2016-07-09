@@ -1,0 +1,168 @@
+           # 0000 # * A simple clock program
+           # 0000 # *
+           # 0000 #
+           # 0000 # * Memory mapped I/O
+           # 0000 # IDR          EQU $E0          * Input Data Register
+           # 0000 # ISR          EQU $E1          * Input Status Register
+           # 0000 # ODR          EQU $E2          * Output Data Register
+           # 0000 # OSR          EQU $E3          * Output Status Register
+           # 0000 #
+           # 0000 # * Time subsystem
+           # 0000 # SECS         EQU $E8
+           # 0000 # MINS         EQU $E9
+           # 0000 # HOURS        EQU $EA
+           # 0000 #
+ORG $0000  # 0000 #              ORG $0
+           # 0000 #
+A6D0       # 0000 #              MOVE #$D0,SP     * initialise stack pointer ($D0)
+           # 0001 #
+9050       # 0001 #              MOVE #title,A    * move address of title string to A
+D017       # 0002 #              JSR  putstring   * jump to sub-routine putstring (packed string)
+           # 0003 #
+905C       # 0003 # main         MOVE #time,A     * move address of time string to A
+D017       # 0004 #              JSR  putstring   * jump to sub-routine putstring (packed string)
+           # 0005 #
+92EA       # 0005 #              MOVE HOURS,A     * move hours value into A
+D032       # 0006 #              JSR  putdbyte    * jump to sub-routine put-dec-byte
+           # 0007 #
+913A       # 0007 #              MOVE #$3a,B      * move a ':' into B
+D02B       # 0008 #              JSR  putchar     * jump to sub-routine putchar
+           # 0009 #
+92E9       # 0009 #              MOVE MINS,A      * move mins value into A
+D032       # 000A #              JSR  putdbyte    * jump to sub-routine put-dec-byte
+           # 000B #
+913A       # 000B #              MOVE #$3a,B      * move a ':' into B
+D02B       # 000C #              JSR  putchar     * jump to sub-routine putchar
+           # 000D #
+92E8       # 000D #              MOVE SECS,A      * move seconds value into A
+D032       # 000E #              JSR  putdbyte    * jump to sub-routine put-dec-byte
+           # 000F #
+910D       # 000F #              MOVE #$0d,B      * move a carriage return into B
+D02B       # 0010 #              JSR  putchar     * jump to sub-routine putchar
+           # 0011 #
+92E1       # 0011 #              MOVE ISR,A       * get the ISR
+8000       # 0012 #              CMP  #$00,A      * check if a key has been pressed
+C303       # 0013 #              BEQ  main        * if it hasn't then goto main
+           # 0014 #
+9064       # 0014 #              MOVE #complete,A * move address of string3 to A
+D017       # 0015 #              JSR  putstring   * jump to putstring routine
+F000       # 0016 #              HALT             * finished
+           # 0017 #
+           # 0017 #
+           # 0017 # * putstring routine - prints packed strings
+           # 0017 # * expects the start address in A
+           # 0017 # *
+9900       # 0017 # putstring MOVE (A),B       *
+7D00       # 0018 #           SWAP B           *
+8C00       # 0019 #           PUSH A           *
+90FF       # 001A #           MOVE #$ff,A      *
+5700       # 001B #           AND  A,B         *
+8E00       # 001C #           POP  A           *
+8100       # 001D #           CMP  #$00,B      *
+C32A       # 001E #           BEQ  _done       *
+D02B       # 001F #           JSR  putchar     * jump to putchar
+9900       # 0020 #           MOVE (A),B       *
+8C00       # 0021 #           PUSH A           *
+90FF       # 0022 #           MOVE #$ff,A      *
+5700       # 0023 #           AND  A,B         *
+8E00       # 0024 #           POP  A           *
+8100       # 0025 #           CMP  #$00,B      *
+C32A       # 0026 #           BEQ  _done       *
+D02B       # 0027 #           JSR  putchar     *
+0001       # 0028 #           ADD  #$01,A      *
+E017       # 0029 #           JMP  putstring   * jump to addr
+F100       # 002A # _done     RTS              * return from subroutine
+           # 002B #
+           # 002B # *
+           # 002B # * putchar routine (char in lo-byte of B)
+           # 002B # *
+8C00       # 002B # putchar   PUSH A           * save A on the stack
+92E3       # 002C # _putch1   MOVE OSR,A       * move OSR to A
+8000       # 002D #           CMP  #$00,A      * Can we print ?
+C32C       # 002E #           BEQ  _putch1     * If not, grab OSR again (absolute branch)
+A3E2       # 002F #           MOVE B,ODR       * otherwise print lo-byte of B
+8E00       # 0030 #           POP  A           * retrieve a from the stack
+F100       # 0031 #           RTS              * return from subroutine
+           # 0032 #
+           # 0032 #
+           # 0032 #
+           # 0032 #
+           # 0032 # *
+           # 0032 # * put-dec-byte (value in A)
+           # 0032 # *
+8C00       # 0032 # putdbyte  PUSH A
+8D00       # 0033 #           PUSH B
+9100       # 0034 #           MOVE #$00,B      * set B to 0
+A34E       # 0035 #           MOVE B,_tens     * clear the tens variable
+A24F       # 0036 #           MOVE A,_units    * set the units variable to A
+800A       # 0037 # _decloop  CMP  #$0a,A      * compare A with 10
+BB3F       # 0038 #           BMI  _print      * goto print if less than 10
+200A       # 0039 #           SUB  #$0a,A      * otherwise A = A-10
+934E       # 003A #           MOVE _tens,B     * B = tens  }
+0101       # 003B #           ADD  #$01,B      * B++       } i.e tens++
+A34E       # 003C #           MOVE B,_tens     * tens = B  }
+A24F       # 003D #           MOVE A,_units    * A = units
+E037       # 003E #           JMP  _decloop    * goto decloop
+924E       # 003F # _print    MOVE _tens,A     * move tens into A
+0030       # 0040 #           ADD  #$30,A      * add 30hex (i.e. its a char number now)
+8D00       # 0041 #           PUSH B           *
+9700       # 0042 #           MOVE A,B         *
+D02B       # 0043 #           JSR  putchar     * print it
+8F00       # 0044 #           POP  B           *
+924F       # 0045 #           MOVE _units,A    * move units to A
+0030       # 0046 #           ADD  #$30,A      * add 30hex (i.e. its a char number now)
+8D00       # 0047 #           PUSH B           *
+9700       # 0048 #           MOVE A,B         *
+D02B       # 0049 #           JSR  putchar     * print it
+8F00       # 004A #           POP  B           *
+8F00       # 004B #           POP  B           *
+8E00       # 004C #           POP  A           *
+F100       # 004D #           RTS              *
+           # 004E #
+           # 004E # * data storage
+0000       # 004E # _tens     DS.W 1           * storage for tens variable
+0000       # 004F # _units    DS.W 1           * storage for units variable
+           # 0050 #
+           # 0050 #
+           # 0050 #
+           # 0050 # * text strings
+0D0A       # 0050 # title        DC.B '\r\nThe simple clock\r\n\r\n',0
+5468       #      #
+6520       #      #
+7369       #      #
+6D70       #      #
+6C65       #      #
+2063       #      #
+6C6F       #      #
+636B       #      #
+0D0A       #      #
+0D0A       #      #
+0000       #      #
+           # 005C #
+4375       # 005C # time         DC.B 'Current Time : ',0
+7272       #      #
+656E       #      #
+7420       #      #
+5469       #      #
+6D65       #      #
+203A       #      #
+2000       #      #
+           # 0064 #
+0D0A       # 0064 # complete     DC.B '\r\n\r\nThis program has completed.\r\n\r\n',0
+0D0A       #      #
+5468       #      #
+6973       #      #
+2070       #      #
+726F       #      #
+6772       #      #
+616D       #      #
+2068       #      #
+6173       #      #
+2063       #      #
+6F6D       #      #
+706C       #      #
+6574       #      #
+6564       #      #
+2E0D       #      #
+0A0D       #      #
+0A00       #      #

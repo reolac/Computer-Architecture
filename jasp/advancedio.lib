@@ -1,0 +1,828 @@
+*-----------------------------------------------------------------------------
+* Title    : advancedio.lib
+* Revision : 1.1
+* Author   : Mark Burrell
+* Date     : 03-Jul-2003
+*-----------------------------------------------------------------------------
+* Description
+* -----------
+* This library defines a number of useful functions and constants 
+* for use within JASP programs.
+*
+* It can be used by including the following statement in your
+* JASP code :-
+*
+*       USE "advancedio.lib"
+*
+* This library implements more functions that the basicio.lib
+* library file.  It can only be used by 32-bit instruction sets,
+* like the advanced instruction set.
+*
+* The Implemented Routines
+* ------------------------
+*
+* putdbyte   - prints lo-byte of register A as decimal value.
+* putdword   - prints a word held as a decimal number
+* putstring  - prints packed strings, address has to be in register A.
+* putchar    - prints a single character from lo-byte of register B.
+* putbyte    - prints a word held as 2 hex chars (lo-byte of A)
+* putword    - prints a word held as 4 hex chars (from A)
+* getchar    - get a character from the keyboard, char in A register.
+* newline    - print a CR/LF pair
+* getustring - read in an unpacked character string, address in A
+*              and required size in B
+* putustring - print an unpacked character string, address in A
+* inkey      - read a character from the keyboard if available.
+* getdword   - read up to 6 chars and interpret as a signed decimal value     
+* getbyte    - read 2 chars and interpret as a hexadecimal value     
+* getword    - read 4 chars and interpret as a hexadecimal value     
+* getdbyte   - read upto 4 chars and interpret as a signed decimal value     
+*
+*-----------------------------------------------------------------------------
+* Constants
+*-----------------------------------------------------------------------------
+* Memory mapped I/O
+IDR       EQU $E0          * Input Data Register
+ISR       EQU $E1          * Input Status Register
+ODR       EQU $E2          * Output Data Register
+OSR       EQU $E3          * Output Status Register
+
+* Time subsystem
+_SECS     EQU $E8          * Current seconds
+_MINS     EQU $E9          * Current minutes
+_HOURS    EQU $EA          * Current hours
+_DAY      EQU $EB          * Current day
+_MONTH    EQU $EC          * Current month
+_YEAR     EQU $ED          * Current year
+_TIMER    EQU $EE          * Current timer value
+
+
+*-----------------------------------------------------------------------------
+* putstring - Prints packed strings, expects the start address in A.
+*-----------------------------------------------------------------------------
+putstring                  *
+        MOVE (A),B         * move a string word into B
+        SWAP B             * swap the bytes
+        PUSH A             * save A on the stack
+        MOVE #$ff,A        * place $00ff in A
+        AND  A,B           * mask B with A
+        POP  A             * restore A
+        CMP  #$00,B        * check if B lo-byte is 0
+        BEQ  _puts_done    *   and finish if it is
+        JSR  putchar       * jump to putchar
+        MOVE (A),B         * move the string word into B again
+        PUSH A             * save A on the stack
+        MOVE #$ff,A        * place $00ff in A
+        AND  A,B           * mask B with A
+        POP  A             * restore A
+        CMP  #$00,B        * check if B lo-byte is 0
+        BEQ  _puts_done    *   and finish if it is
+        JSR  putchar       * jump to putchar
+        ADD  #$01,A        * add 1 to the string pointer
+        JMP  putstring     * go and read the next word
+_puts_done                 *
+        RTS                * return from subroutine
+                           *
+*-----------------------------------------------------------------------------
+* putchar routine (char in lo-byte of B)
+*-----------------------------------------------------------------------------
+putchar                    *
+        PUSH A             * save A on the stack
+_putch1 MOVE OSR,A         * move OSR to A
+        CMP  #$00,A        * Can we print ?
+        BEQ  _putch1       * If not, grab OSR again (absolute branch)
+        MOVE B,ODR         * otherwise print lo-byte of B
+        POP  A             * retrieve a from the stack
+        RTS                * return from subroutine
+                           *
+*-----------------------------------------------------------------------------
+* getchar (value stored in A)
+*-----------------------------------------------------------------------------
+getchar MOVE ISR,A         * move ISA to A
+        CMP  #$00,A        * if it is 0 we have no char
+        BEQ  getchar       * so branch to check again
+        MOVE IDR,A         * when we have a char put it in A
+        RTS                * return from subroutine
+                           *
+*-----------------------------------------------------------------------------                 
+* newline
+*-----------------------------------------------------------------------------
+newline PUSH B             * save B on stack
+        MOVE #$0A,B        * load LF
+        JSR  putchar       * print it
+        MOVE #$0D,B        * load CR
+        JSR  putchar       * print it
+        POP  B             * restore B
+        RTS                * return from subroutine
+                           *
+*-----------------------------------------------------------------------------
+* putword (value in  A)
+*-----------------------------------------------------------------------------
+putword SWAP A             * swap bytes in A
+        JSR putbyte        * print lo-byte
+        SWAP A             * swap bytes again in A
+        JSR putbyte        * print lo-byte
+        RTS                * return from subroutine
+                           *
+*-----------------------------------------------------------------------------
+* putbyte (value in lo-byte of A)
+*-----------------------------------------------------------------------------
+putbyte                    *
+        PUSH A             * save A on the stack
+        PUSH B             * save B on the stack
+        AND  _pb_andmask,A * and A with $00ff
+        MOVE #$00,B        * set B to 0
+        MOVE B,_pb_btens   * clear the tens variable
+        MOVE A,_pb_bunits  * set the units variable to A
+_pb_bdecloop               *
+        CMP  #$10,A        * compare A with 16
+        BMI  _pb_bprint    * goto print if less than 16
+        SUB  #$10,A        * otherwise A = A-16
+        MOVE _pb_btens,B   * B = tens  }
+        ADD  #$01,B        * B++       } i.e tens++
+        MOVE B,_pb_btens   * tens = B  }
+        MOVE A,_pb_bunits  * A = units
+        JMP  _pb_bdecloop  * goto decloop 
+_pb_bprint                 *
+        MOVE _pb_btens,A   * move tens into A
+        CMP  #$0A,A        * compare with 10?
+        BPL  _pb_over      *   yes, go to next section
+        ADD  #$30,A        * add 30hex (i.e. its a char number now)
+        JMP _pb_nover      * now deal with units
+_pb_over                   *
+        ADD  #$37,A        * add $37 for ASCII
+_pb_nover                  *
+        PUSH B             * save B on the stack
+        MOVE A,B           * move A into B 
+        JSR  putchar       * print it
+        POP  B             * restore B
+        MOVE _pb_bunits,A  * move units to A
+        CMP  #$0A,A        * compare with 10?
+        BPL  _pb_over2     *   yes, go to next section
+        ADD  #$30,A        * add 30hex (i.e. its a char number now)
+        JMP _pb_nover2     *
+_pb_over2                  *
+        ADD  #$37,A        * add $37 for ASCII
+_pb_nover2                 *
+        PUSH B             * save B on the stack
+        MOVE A,B           * move A into B
+        JSR  putchar       * print it
+        POP  B             * restore B
+        POP  B             * restore B
+        POP  A             * restore A
+        RTS                * return from subroutine
+                           *
+* constant definition      *
+_pb_andmask  DC.W $00ff    *
+                           *
+* data storage             *
+_pb_btens    DS.W 1        * storage for tens variable
+_pb_bunits   DS.W 1        * storage for units variable
+                           *
+*-----------------------------------------------------------------------------
+* putdbyte
+*-----------------------------------------------------------------------------
+putdbyte                    *
+        PUSH A              * save A on the stack
+        PUSH B              * save B on the stack
+        AND #$00FF,A        * clear the top byte
+        MOVE A,B            * move A into B
+        AND #$0080,A        * check MSB to
+        CMP #$0080,A        *   see if it is negative
+        BEQ _pdb_negative   *  and deal with it if it is
+        MOVE B,A            * move B into A
+        JMP _pdb_compute    * start computing the number to print
+_pdb_negative               * if it's negative
+        PUSH B              * save B on the stack
+        MOVE #$2D,B         * } print a '-'
+        JSR  putchar        * }
+        POP  B              * restore B
+                            *
+        NOT  B              * and work out the
+        ADD  #$01,B         *   complement and
+        MOVE B,A            *   place it in A
+_pdb_compute                *
+        MOD  B,#^10         * } work out units
+        MOVE B,_pdb_unit    * }   and store
+        DIV  A,#^10         * }
+                            *
+        MOVE A,B            *
+        MOD  B,#^10         * } work out tens
+        MOVE B,_pdb_ten     * }   and store   
+        DIV  A,#^10         * }
+                            *
+        MOVE A,B            *
+        MOD  B,#^10         * } work out hundreds 
+        MOVE B,_pdb_hun     * }   and store
+        DIV  A,#^10         * }
+                            *
+_pdb_output                 *
+        MOVE #$0,B          * } 
+        MOVE B,_pdb_zeroes  * } print without
+        MOVE _pdb_hun,B     * }   any leading zeroes
+        JSR  _pdb_print     * }
+        MOVE _pdb_ten,B     * }
+        JSR  _pdb_print     * }
+        MOVE _pdb_unit,B    * }
+        ADD  #$30,B         * }
+        JSR  putchar        * }
+        POP  B              * restore B
+        POP  A              * restore A
+        RTS                 * return from subroutine
+                            *
+                            * a print function just to be used by putdbyte
+                            * to avoid printing leading zeroes
+_pdb_print                  *
+        PUSH B              * save B on the stack
+        CMP  #$0,B          * is the number a 0
+        BNE  _pdb_update    *   if no, deal with it
+        JMP  _pdb_no_update * move on to next section
+_pdb_update                 *
+        MOVE #$01,B         * } leading_zeroes = 1
+        MOVE B,_pdb_zeroes  * }
+_pdb_no_update              *
+        MOVE _pdb_zeroes,B  * B = leading_zeroes
+        CMP  #$01,B         * is it 1
+        BEQ  _pdb_yes_print *  so go and print the number
+        POP  B              * restore B
+        JMP  _pdb_no_print  * now quit
+_pdb_yes_print              *
+        POP  B              * restore B
+        ADD  #$30,B         * turn it into an ASCII char
+        JSR  putchar        *   and print it
+_pdb_no_print               *
+        RTS                 * return from subroutine
+                            *
+* storage                   *
+_pdb_unit    DS.W 1         * 
+_pdb_ten     DS.W 1         *
+_pdb_hun     DS.W 1         *
+_pdb_thou    DS.W 1         *
+_pdb_tenthou DS.W 1         *
+_pdb_zeroes  DS.W 1         *
+                            *
+*-----------------------------------------------------------------------------
+* inkey - if a keypress waiting, store it in A, otherwise A is set to 0
+*-----------------------------------------------------------------------------
+inkey                      *
+        MOVE ISR,A         * move ISA to A
+        CMP  #$00,A        * } if it is 0 we have no char
+        BEQ  _ink_no_char  * }
+        MOVE IDR,A         * when we have a char put it in A
+        JMP  _ink_done     * quit
+_ink_no_char               *
+        MOVE #$00,A        * move zero into A
+_ink_done                  *
+        RTS                * return from subroutine
+                           *
+*-----------------------------------------------------------------------------
+* get a signed decimal value in form [-]127, and store it in A 
+*-----------------------------------------------------------------------------
+getdbyte                           *
+        MOVE #$00,A                * store a 0 in the
+        MOVE A,_gdb_sign           *   sign flag, assume positive
+        MOVE A,_gdb_result         * zeroise result
+        MOVE #_gdb_string,A        * first, get the string
+        MOVE #_gdb_stringlength,B  *   into an unpacked data area
+        JSR  getustring            *   before figuring out its value
+        MOVE #_gdb_string,A        * point to the start of the string
+                                   *
+                                   * see if the leading char is a + 
+                                   *   or a -
+        MOVE (A),B                 * get first char into B
+        CMP  #$2B,B                * see if it's a +
+        BEQ  _gdb_plus             *   and deal with it
+        CMP  #$2D,B                * see if it's a -
+        BEQ  _gdb_neg              *   and deal with it
+_gdb_number                        *
+                                   * read all numbers while not zero
+                                   *   and compute answer
+        MOVE (A),B                 * get char into B
+        CMP  #$00,B                * is it 0?
+        BEQ  _gdb_done             *   then finish
+        JSR  readdchar             * convert it to numeric
+        PUSH A                     * save A on the stack
+        MOVE _gdb_result,A         * A = result
+        PUSH B                     * save B on the stack
+        MOVE #^10,B                * }
+        MUL  B,A                   * } A = A * 10
+        POP  B                     * restore B
+        ADD  B,A                   * A = A + B
+        MOVE A,_gdb_result         * result = A
+        POP  A                     * restore A
+        ADD #$01,A                 * point to next char
+        JMP _gdb_number            *   and read it
+_gdb_plus                          *
+                                   * positive is already stored   
+        ADD #$01,A                 * point to next char
+        JMP _gdb_number            *   and read it
+_gdb_neg                           *
+                                   * store a sign flag for a positive
+        ADD #$01,A                 * point to next char
+        MOVE #$01,B                * store a 1 in the
+        MOVE B,_gdb_sign           *   sign flag, negative
+        JMP _gdb_number            * read next char
+_gdb_done                          *
+                                   * if sign flag is set, then take 2's 
+                                   *   complement
+        MOVE _gdb_result,A         * A = result
+        MOVE _gdb_sign,B           * B = sign
+        CMP  #$00,B                * is the sign set?
+        BEQ  _gdb_really_done      *   if yes, then finish
+        NOT  A                     * }
+        ADD  #$01,A                * } A = ~A + 1
+_gdb_really_done                   *
+        RTS                        * return from subroutine
+                                   *
+* storage                          *
+_gdb_string       DS.W  5          *
+_gdb_stringlength EQU   4          *
+_gdb_sign         DS.W  1          *
+_gdb_result       DS.W  1          *
+                                   *
+*-----------------------------------------------------------------------------
+* getbyte - essentially a copy of getdword with the sign section cut out
+*-----------------------------------------------------------------------------
+getbyte                            *
+        MOVE #$00,A                * store a 0 in the
+        MOVE A,_gb_result          * zeroise result
+        MOVE #_gb_string,A         * first, get the string
+        MOVE #_gb_stringlength,B   *  into an unpacked data area
+        JSR  getustring            *  before figuring out its value
+        MOVE #_gb_string,A         * point to the start of the string
+_gb_number                         *
+                                   * read all numbers while not zero
+                                   *   and compute answer
+        MOVE (A),B                 * B contains first char
+        CMP  #$00,B                * is it 0?
+        BEQ  _gb_done              *   yes, then done
+        JSR  readhchar             * convert it to numeric
+        PUSH A                     * save A on the stack
+        MOVE _gb_result,A          * A = result
+        PUSH B                     * save B on the stack
+        MOVE #^16,B                * }
+        MUL  B,A                   * } A = A * 16
+        POP  B                     * restore B
+        ADD  B,A                   * A = A + B
+        MOVE A,_gb_result          * result = A
+        POP  A                     * restore A
+        ADD #$01,A                 * point to next char
+        JMP _gb_number             *   and read it
+_gb_done                           *
+        MOVE _gb_result,A          * A = result
+        RTS                        * return from subroutine
+                                   *
+* storage                          *
+_gb_string       DS.W  3           *
+_gb_stringlength EQU   2           * 
+_gb_result       DS.W  1           *
+                                   *
+*-----------------------------------------------------------------------------
+* getword - copy of getbyte, apart from reads upto 4 chars, not 2
+*-----------------------------------------------------------------------------
+getword                            *
+        MOVE #$00,A                * store a 0 in the
+        MOVE A,_gw_result          * zeroise result
+        MOVE #_gw_string,A         * first, get the string
+        MOVE #_gw_stringlength,B   *  into an unpacked data area
+        JSR  getustring            *  before figuring out its value
+        MOVE #_gw_string,A         * point to the start of the string
+_gw_number                         *
+                                   * read all numbers while not zero
+                                   *   and compute answer
+        MOVE (A),B                 * move pointed char to B
+        CMP  #$00,B                * is it 0?
+        BEQ  _gw_done              *   yes, then done
+        JSR  readhchar             * convert it to numeric
+        PUSH A                     * save A on the stack
+        MOVE _gw_result,A          * A = result
+        PUSH B                     * save B on the stack
+        MOVE #^16,B                * }
+        MUL  B,A                   * } A = A * 16
+        POP  B                     * restore B
+        ADD  B,A                   * A = A + B
+        MOVE A,_gw_result          * result = A
+        POP  A                     * restore A
+        ADD #$01,A                 * point to next char
+        JMP _gw_number             * next char
+_gw_done                           *
+        MOVE _gw_result,A          * A = result
+        RTS                        * return from subroutine
+                                   *
+* storage                          *
+_gw_string       DS.W  5           *
+_gw_stringlength EQU   4           *
+_gw_result       DS.W  1           *
+                                   *
+*-----------------------------------------------------------------------------
+* print signed word in decimal
+*-----------------------------------------------------------------------------
+putdword                           *
+        PUSH A                     * save A on the stack
+        PUSH B                     * save B on the stack
+        MOVE A,B                   * B = A
+        AND #$8000,A               * check MSB to
+        CMP #$8000,A               *   see if it is negative
+        BEQ _pdw_negative          *   and if it is deal with it
+        MOVE B,A                   * A = B
+        JMP _pdw_compute           * work out the value
+_pdw_negative                      * if it's negative
+        PUSH B                     *   save B on the stack
+        MOVE #$2D,B                *   }  print a '-'
+        JSR  putchar               *   }
+        POP  B                     *   restore B on the stack
+        NOT  B                     * and work out the
+        ADD  #$01,B                *   complement
+        MOVE B,A                   *   and put it in A
+                                   *
+        CMP  #$8000,A              * }cheat with the 
+        BNE  _pdw_compute          * }  special case of
+        PUSH B                     * }  0x8000 where the
+        MOVE #^8,B                 * }  complement is 
+        MOVE B,_pdw_unit           * }  itself
+        MOVE #^6,B                 * }
+        MOVE B,_pdw_ten            * }
+        MOVE #^7,B                 * }
+        MOVE B,_pdw_hun            * }
+        MOVE #^2,B                 * }
+        MOVE B,_pdw_thou           * }
+        MOVE #^3,B                 * }
+        MOVE B,_pdw_tenthou        * }
+        POP  B                     * }
+        JMP  _pdw_output           * and output it
+_pdw_compute                       * } otherwise, work out
+        MOD  B,#^10                * }  the values to print
+        MOVE B,_pdw_unit           * }
+        DIV  A,#^10                * }
+                                   * }
+        MOVE A,B                   * }
+        MOD  B,#^10                * }
+        MOVE B,_pdw_ten            * }
+        DIV  A,#^10                * }
+                                   * }
+        MOVE A,B                   * }
+        MOD  B,#^10                * }
+        MOVE B,_pdw_hun            * }
+        DIV  A,#^10                * }
+                                   * }
+        MOVE A,B                   * }
+        MOD  B,#^10                * }
+        MOVE B,_pdw_thou           * }
+        DIV  A,#^10                * }
+                                   * }
+        MOVE A,B                   * }
+        MOD  B,#^10                * }
+        MOVE B,_pdw_tenthou        * }
+        DIV  A,#^10                * }
+_pdw_output                        *
+        MOVE #$0,B                 * } get rid of leading zeroes 
+        MOVE B,_pdw_zeroes         * }  and print
+        MOVE _pdw_tenthou,B        * }
+        JSR  _pdw_print            * }
+        MOVE _pdw_thou,B           * }
+        JSR  _pdw_print            * }
+        MOVE _pdw_hun,B            * }
+        JSR  _pdw_print            * }
+        MOVE _pdw_ten,B            * }
+        JSR  _pdw_print            * }
+        MOVE _pdw_unit,B           * }
+        ADD  #$30,B                * }
+        JSR  putchar               * }
+        POP  B                     * restore B
+        POP  A                     * restore A
+        RTS                        * return from subroutine
+                                   *
+                                   * a print function just to be used by 
+                                   *   putdword to avoid printing leading 
+                                   *   zeroes
+_pdw_print                         *
+        PUSH B                     * save B on the stack
+        CMP  #$0,B                 * is it 0?
+        BNE  _pdw_update           *  no, so set flag
+        JMP  _pdw_no_update        * otherwise go to next section
+_pdw_update                        *
+        MOVE #$01,B                * }
+        MOVE B,_pdw_zeroes         * } zeroes = 1
+_pdw_no_update                     *
+        MOVE _pdw_zeroes,B         * B = zeroes
+        CMP  #$01,B                * is it 1?
+        BEQ  _pdw_yes_print        *   yes, so print it
+        POP  B                     * restore B
+        JMP  _pdw_no_print         * finish
+_pdw_yes_print                     *
+        POP  B                     * restore B
+        ADD  #$30,B                * turn it into a char
+        JSR  putchar               * print it
+_pdw_no_print                      *
+        RTS                        * return from subroutine
+                                   *
+* storage                          *
+_pdw_unit    DS.W 1                *
+_pdw_ten     DS.W 1                *
+_pdw_hun     DS.W 1                *
+_pdw_thou    DS.W 1                *
+_pdw_tenthou DS.W 1                *
+_pdw_zeroes  DS.W 1                *
+                                   *
+*-----------------------------------------------------------------------------
+* get an unpacked string - address of string in A
+* max size for string in B - should be 1 larger
+* than required storage to store final null
+*-----------------------------------------------------------------------------
+getustring                         *
+        MOVE B,_gus_init_count     * store max size into init_count
+        MOVE B,_gus_count          * store max size into count
+_gus_getchar                       *
+        PUSH A                     * save A on the stack
+        JSR  getchar               * get the char in A
+        MOVE A,B                   * }
+        JSR  putchar               * } move it to B to print
+        POP  A                     * restore A
+        CMP  #$0D,B                * see if CR
+        BEQ  _gus_cr               *   and do something about it
+        CMP  #$08,B                * see if DEL
+        BEQ  _gus_del              *   and do something about it
+        MOVE B,(A)                 * store the char
+        ADD  #$01,A                * and index the storage
+        MOVE _gus_count,B          * }
+        SUB  #$01,B                * } count = count - 1
+        MOVE B,_gus_count          * }
+        CMP  #$00,B                * if we have hit the limit then
+        BEQ  _gus_done             * end the capture
+        JMP  _gus_getchar          * do next char
+                                   *
+_gus_del                           *
+        MOVE _gus_count,B          * add 1 back on the counter
+        CMP  _gus_init_count,B     * compare B with count
+        BEQ  _gus_at_start         *   if so, start again
+        ADD  #$01,B                * increment count
+        MOVE B,_gus_count          *  and store it
+        SUB  #$01,A                * set index back 1 place 
+        MOVE  #$20,B               * clear away the deleted 
+        JSR   putchar              *  character and set
+        MOVE  #$08,B               *  the cursor to the
+        JSR   putchar              *  correct point
+_gus_at_start                      *
+        JMP  _gus_getchar          * get next char
+_gus_cr                            *
+_gus_done                          *
+        MOVE  #$0D,B               * } print CR
+        JSR   putchar              * }
+        MOVE  #$0A,B               *   }print LF
+        JSR   putchar              *   }
+        MOVE #$00,B                * } store the null
+        MOVE B,(A)                 * }
+ RTS                               * return from subroutine
+_gus_count DS.W 1                  * storage for count
+_gus_init_count DS.W 1             * storage for initial_count
+                                   *
+*-----------------------------------------------------------------------------
+* print unpacked string, assume start location in A
+*-----------------------------------------------------------------------------
+putustring                         *
+_pus_next                          *
+        MOVE (A),B                 * get a character
+        CMP #$0,B                  * is this the terminator?
+        BEQ _pus_done              *   yes - stop
+        JSR  putchar               * print it
+        ADD #$1,A                  * increment data address
+        JMP _pus_next              * repeat
+_pus_done                          *
+        RTS                        * return from subroutine
+                                   *
+*-----------------------------------------------------------------------------
+* convert a character to a decimal value - used by other routines
+*-----------------------------------------------------------------------------
+readdchar                          *
+                                   *
+                                   * char in B converted to decimal numeric 
+                                   * value (not efficient, but no flags 
+                                   * for < or >, so explicit testing is 
+                                   * quicker), if char is not 0-9, then 
+                                   * returns 0
+                                   *
+        CMP #$30,B                 * is a 0?
+        BEQ _rdch_0                *   yes, deal with it
+        CMP #$31,B                 * is a 1?
+        BEQ _rdch_1                *   yes, deal with it
+        CMP #$32,B                 * is a 2?
+        BEQ _rdch_2                *   yes, deal with it
+        CMP #$33,B                 * is a 3?
+        BEQ _rdch_3                *   yes, deal with it
+        CMP #$34,B                 * is a 4?
+        BEQ _rdch_4                *   yes, deal with it
+        CMP #$35,B                 * is a 5?
+        BEQ _rdch_5                *   yes, deal with it
+        CMP #$36,B                 * is a 6?
+        BEQ _rdch_6                *   yes, deal with it
+        CMP #$37,B                 * is a 7?
+        BEQ _rdch_7                *   yes, deal with it
+        CMP #$38,B                 * is a 8?
+        BEQ _rdch_8                *   yes, deal with it
+        CMP #$39,B                 * is a 9?
+        BEQ _rdch_9                *   yes, deal with it
+_rdch_0                            *
+        MOVE #$0,B                 * move 0 to B (note that this is also the
+        JMP  _rdch_done            *   fail option)
+_rdch_1                            *
+        MOVE #$1,B                 * move 1 to B
+        JMP  _rdch_done            *
+_rdch_2                            *
+        MOVE #$2,B                 * move 2 to B
+        JMP  _rdch_done            *
+_rdch_3                            *
+        MOVE #$3,B                 * move 3 to B
+        JMP  _rdch_done            *
+_rdch_4                            *
+        MOVE #$4,B                 * move 4 to B
+        JMP  _rdch_done            *
+_rdch_5                            *
+        MOVE #$5,B                 * move 5 to B
+        JMP  _rdch_done            *
+_rdch_6                            *
+        MOVE #$6,B                 * move 6 to B
+        JMP  _rdch_done            *
+_rdch_7                            *
+        MOVE #$7,B                 * move 7 to B
+        JMP  _rdch_done            *
+_rdch_8                            *
+        MOVE #$8,B                 * move 8 to B
+        JMP  _rdch_done            *
+_rdch_9                            *
+        MOVE #$9,B                 * move 9 to B
+        JMP  _rdch_done            *
+_rdch_done                         *
+        RTS                        * return from subroutine
+                                   *
+*-----------------------------------------------------------------------------
+* get a signed decimal value in form [-]32768, and store it in A 
+*-----------------------------------------------------------------------------
+getdword                           *
+        MOVE #$00,A                * store a 0 in the
+        MOVE A,_gdw_sign           *   sign flag, assume positive
+        MOVE A,_gdw_result         * zeroise result
+        MOVE #_gdw_string,A        * first, get the string
+        MOVE #_gdw_stringlength,B  *   into an unpacked data area
+        JSR  getustring            *   before figuring out its value
+                                   *
+        MOVE #_gdw_string,A        * point to the start of the string
+                                   *
+                                   * see if the leading char is a + or a -
+        MOVE (A),B                 * move pointed char to B
+        CMP  #$2B,B                * } see if it's a +
+        BEQ  _gdw_plus             * }   and deal with it
+        CMP  #$2D,B                *    } see if it's a -
+        BEQ  _gdw_neg              *    }   and deal with it
+_gdw_number                        *
+                                   * read all numbers while not zero
+                                   *   and compute answer
+        MOVE (A),B                 * move ponited char to B
+        CMP  #$00,B                * is it 0?
+        BEQ  _gdw_done             *   yes, so done
+        JSR  readdchar             * convert it to numeric
+        PUSH A                     * save A on the stack
+        MOVE _gdw_result,A         * A = result 
+        PUSH B                     * save B on the stack
+        MOVE #^10,B                * }
+        MUL  B,A                   * } A = A * 10
+        POP  B                     * restore B
+        ADD  B,A                   * A = A + B
+        MOVE A,_gdw_result         * result = A
+        POP  A                     * restore A
+        ADD #$01,A                 * point to next char
+        JMP _gdw_number            *
+_gdw_plus                          *
+                                   * positive is already stored
+        ADD #$01,A                 * point to next char
+        JMP _gdw_number            *
+_gdw_neg                           *
+                                   * store a sign flag for a positive
+        ADD #$01,A                 * point to next char
+        MOVE #$01,B                * store a 1 in the
+        MOVE B,_gdw_sign           *  sign flag, negative
+        JMP _gdw_number            *
+_gdw_done                          *
+                                   * if sign flag is set, then take 
+                                   *   2's complement
+        MOVE _gdw_result,A         * A = result
+        MOVE _gdw_sign,B           * move sign to B
+        CMP  #$00,B                * is it 0?
+        BEQ  _gdw_really_done      *   then done
+        NOT  A                     * } A = ~A + 1
+        ADD  #$01,A                * }
+_gdw_really_done                   *
+        RTS                        * return from subroutine
+                                   *
+* storage for a sign and max of 5 numbers, like -32000, and 1 more so
+* the user has to always hit a CR
+_gdw_string       DS.W  8          *
+_gdw_stringlength EQU   7          *
+_gdw_sign         DS.W  1          *
+_gdw_result       DS.W  1          *
+                                   *
+*-----------------------------------------------------------------------------
+* convert a character to a decimal value - used by other routines
+*-----------------------------------------------------------------------------
+readhchar                          *
+                                   * char in B converted to hexadecimal 
+                                   * numeric value (not efficient, but no 
+                                   * flags for < or >, so explicit testing 
+                                   * is quicker), if char is not 0-9,A-F then
+                                   * returns 0
+                                   *
+        CMP #$30,B                 * is a 0?
+        BEQ _rdhch_0               *   yes, deal with it
+        CMP #$31,B                 * is a 1?
+        BEQ _rdhch_1               *   yes, deal with it
+        CMP #$32,B                 * is a 2?
+        BEQ _rdhch_2               *   yes, deal with it
+        CMP #$33,B                 * is a 3?
+        BEQ _rdhch_3               *   yes, deal with it
+        CMP #$34,B                 * is a 4?
+        BEQ _rdhch_4               *   yes, deal with it
+        CMP #$35,B                 * is a 5?
+        BEQ _rdhch_5               *   yes, deal with it
+        CMP #$36,B                 * is a 6?
+        BEQ _rdhch_6               *   yes, deal with it
+        CMP #$37,B                 * is a 7?
+        BEQ _rdhch_7               *   yes, deal with it
+        CMP #$38,B                 * is a 8?
+        BEQ _rdhch_8               *   yes, deal with it
+        CMP #$39,B                 * is a 9?
+        BEQ _rdhch_9               *   yes, deal with it
+        CMP #$61,B                 * is a a
+        BEQ _rdhch_a               *   yes, deal with it
+        CMP #$62,B                 * is a b
+        BEQ _rdhch_b               *   yes, deal with it
+        CMP #$63,B                 * is a c
+        BEQ _rdhch_c               *   yes, deal with it
+        CMP #$64,B                 * is a d
+        BEQ _rdhch_d               *   yes, deal with it
+        CMP #$65,B                 * is a e
+        BEQ _rdhch_e               *   yes, deal with it
+        CMP #$66,B                 * is a f
+        BEQ _rdhch_f               *   yes, deal with it
+        CMP #$41,B                 * is a A
+        BEQ _rdhch_a               *   yes, deal with it
+        CMP #$42,B                 * is a B
+        BEQ _rdhch_b               *   yes, deal with it
+        CMP #$43,B                 * is a C
+        BEQ _rdhch_c               *   yes, deal with it
+        CMP #$44,B                 * is a D
+        BEQ _rdhch_d               *   yes, deal with it
+        CMP #$45,B                 * is a E
+        BEQ _rdhch_e               *   yes, deal with it
+        CMP #$46,B                 * is a F
+        BEQ _rdhch_f               *   yes, deal with it
+_rdhch_0                           *
+        MOVE #$0,B                 * move 0 to B (note that this is also the
+        JMP  _rdhch_done           *   fail option)
+_rdhch_1                           *
+        MOVE #$1,B                 * move 1 to B
+        JMP  _rdhch_done           *
+_rdhch_2                           *
+        MOVE #$2,B                 * move 2 to B
+        JMP  _rdhch_done           *
+_rdhch_3                           *
+        MOVE #$3,B                 * move 3 to B
+        JMP  _rdhch_done           *
+_rdhch_4                           *
+        MOVE #$4,B                 * move 4 to B
+        JMP  _rdhch_done           *
+_rdhch_5                           *
+        MOVE #$5,B                 * move 5 to B
+        JMP  _rdhch_done           *
+_rdhch_6                           *
+        MOVE #$6,B                 * move 6 to B
+        JMP  _rdhch_done           *
+_rdhch_7                           *
+        MOVE #$7,B                 * move 7 to B
+        JMP  _rdhch_done           *
+_rdhch_8                           *
+        MOVE #$8,B                 * move 8 to B
+        JMP  _rdhch_done           *
+_rdhch_9                           *
+        MOVE #$9,B                 * move 9 to B
+        JMP  _rdhch_done           *
+_rdhch_a                           *
+        MOVE #^10,B                * move 10 to B
+        JMP  _rdhch_done           *
+_rdhch_b                           *
+        MOVE #^11,B                * move 11 to B
+        JMP  _rdhch_done           *
+_rdhch_c                           *
+        MOVE #^12,B                * move 12 to B
+        JMP  _rdhch_done           *
+_rdhch_d                           *
+        MOVE #^13,B                * move 13 to B
+        JMP  _rdhch_done           *
+_rdhch_e                           *
+        MOVE #^14,B                * move 14 to B
+        JMP  _rdhch_done           *
+_rdhch_f                           *
+        MOVE #^15,B                * move 15 to B
+        JMP  _rdhch_done           *
+_rdhch_done                        *
+        RTS                        * return from subroutine
+                                   *
+*-----------------------------------------------------------------------------

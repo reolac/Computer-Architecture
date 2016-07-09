@@ -1,0 +1,95 @@
+#-------------------------------------------------------------------------------
+#
+# JASP Assembler (c) 1999-2003 Mark S. Burrell
+# V1.1 (03-Jul-2003)
+#
+# Assembler input : list.txt
+# Instruction set : instruct.mco
+# Assembler mode  : default
+#
+#-------------------------------------------------------------------------------
+#
+# Assembler Listing
+#
+#-------------------------------------------------------------------------------
+9229       # 0000 # 		MOVE list1,A		* move list1 to A
+9329       # 0001 # 		MOVE list1,B		* move list1 to B
+0600       # 0002 # 		ADD B,A				* add B to A
+A229       # 0003 # 		MOVE A,list1		* move A to list1
+           # 0004 #
+922A       # 0004 # 		MOVE list2,A		* move list2 to A
+932A       # 0005 # 		MOVE list2,B		* move list2 to B
+0600       # 0006 # 		ADD B,A				* add B to A
+A22A       # 0007 # 		MOVE A,list2		* move A to list2
+           # 0008 #
+922B       # 0008 # 		MOVE list3,A		* move list3 to A
+932B       # 0009 # 		MOVE list3,B		* move list3 to B
+0600       # 000A # 		ADD B,A				* add B to A
+A22B       # 000B # 		MOVE A,list3		* move A to list3
+           # 000C #
+922C       # 000C # 		MOVE list4,A		* move list4 to A
+932C       # 000D # 		MOVE list4,B		* move list4 to B
+0600       # 000E # 		ADD B,A				* add B to A
+A22C       # 000F # 		MOVE A,list4		* move A to list4
+           # 0010 #
+922D       # 0010 # 		MOVE list5,A		* move list5 to A
+932D       # 0011 # 		MOVE list5,B		* move list5 to B
+0600       # 0012 # 		ADD B,A				* add B to A
+A22D       # 0013 # 		MOVE A,list5		* move A to list5
+           # 0014 #
+922E       # 0014 # 		MOVE list6,A		* move list6 to A
+932E       # 0015 # 		MOVE list6,B		* move list6 to B
+0600       # 0016 # 		ADD B,A				* add B to A
+A22E       # 0017 # 		MOVE A,list6		* move A to list6
+           # 0018 #
+922F       # 0018 # 		MOVE list7,A		* move list7 to A
+932F       # 0019 # 		MOVE list7,B		* most list7 to B
+0600       # 001A # 		ADD B,A				* add B to A
+A22F       # 001B # 		MOVE A,list7		* move A to list7
+           # 001C #
+9230       # 001C # 		MOVE list8,A		* move list8 to A
+9330       # 001D # 		MOVE list8,B		* move list8 to B
+0600       # 001E # 		ADD B,A				* add B to A
+A230       # 001F # 		MOVE A,list8		* move A to list8
+           # 0020 #
+9231       # 0020 # 		MOVE list9,A		* move list9 to A
+9331       # 0021 # 		MOVE list9,B		* move list9 to B
+0600       # 0022 # 		ADD B,A				* add B to A
+A231       # 0023 # 		MOVE A,list9		* move A to list9
+           # 0024 #
+9232       # 0024 # 		MOVE list10,A		* move list10 to A
+9332       # 0025 # 		MOVE list10,B		* move list10 to B
+0600       # 0026 # 		ADD B,A				* add B to A
+A232       # 0027 # 		MOVE A,list10		* move A to list10
+           # 0028 #
+F000       # 0028 # 		HALT				* ends the program
+           # 0029 #
+           # 0029 #
+0001       # 0029 # list1 	DC.W 0001
+0002       # 002A # list2	DC.W 0002
+0003       # 002B # list3	DC.W 0003
+0004       # 002C # list4	DC.W 0004
+0005       # 002D # list5	DC.W 0005
+0006       # 002E # list6	DC.W 0006
+0007       # 002F # list7	DC.W 0007
+0008       # 0030 # list8	DC.W 0008
+0009       # 0031 # list9	DC.W 0009
+000A       # 0032 # list10	DC.W 000A
+#
+#-------------------------------------------------------------------------------
+#
+# Symbol table
+#
+#  list1....................................... 0029
+#  list10...................................... 0032
+#  list2....................................... 002A
+#  list3....................................... 002B
+#  list4....................................... 002C
+#  list5....................................... 002D
+#  list6....................................... 002E
+#  list7....................................... 002F
+#  list8....................................... 0030
+#  list9....................................... 0031
+#
+# Assembler completed successfully.
+#

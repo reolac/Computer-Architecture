@@ -1,0 +1,60 @@
+ODR		EQU $E2
+OSR		EQU $E3
+
+		MOVE high,A 
+		MOVE middle,B 
+
+while 	CMP A,B
+
+		BMI true
+		BEQ false
+ 
+true	PUSH B
+		MOVE low,B
+		
+while2 	CMP A,B
+		BMI true2
+		BEQ false2
+				 
+true2 	PUSH A
+		MOVE middle,A
+while3 	CMP A,B
+		BEQ false3
+false3	MOVE B,middle
+		MOVE A,low			
+		JMP done
+							
+false2 	MOVE A,low
+		MOVE B,high
+		MOVE middle,A
+		MOVE low,B
+while4 	CMP A,B
+		BEQ false4
+false4	MOVE A,low 
+		MOVE B,middle
+		JMP done
+					
+false 	PUSH B 
+		MOVE low,B
+while5 	CMP A,B
+		BMI true3
+true3	PUSH B
+		MOVE high,B
+		MOVE B,high
+		JMP done
+									 
+		BEQ false5
+false5  MOVE A,low
+		MOVE B,high
+		JMP done
+		
+done	PUSH B
+		MOVE OSR,B
+		MOVE A,ODR
+		POP B
+
+		HALT
+
+low 	DC.W 0017
+middle 	DC.W 0033
+high	DC.W 0061
